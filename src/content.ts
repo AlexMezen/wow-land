@@ -64,7 +64,6 @@ export type SiteCopy = {
     scroll: string
     model: string
     image: string
-    video: string
     stats: Stat[]
   }
   story: {
@@ -186,7 +185,6 @@ export const content: Record<Locale, SiteCopy> = {
       scroll: 'Гортайте, щоб дослідити',
       model: 'Concept 01 / Forest line',
       image: '/images/hero-cabin.webp',
-      video: '/videos/forest-aerial.webm',
       stats: [
         { value: '01', label: 'єдина команда' },
         { value: '360°', label: 'цикл реалізації' },
@@ -417,7 +415,6 @@ export const content: Record<Locale, SiteCopy> = {
       scroll: 'Scroll to explore',
       model: 'Concept 01 / Forest line',
       image: '/images/hero-cabin.webp',
-      video: '/videos/forest-aerial.webm',
       stats: [
         { value: '01', label: 'integrated team' },
         { value: '360°', label: 'delivery cycle' },
