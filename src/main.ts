@@ -41,9 +41,11 @@ const arrowIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11
 const cornerIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8"/></svg>'
 const checkIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-9"/></svg>'
 
+const asset = (path: string): string => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+
 const brand = (): string => `
   <a class="brand" href="#top" aria-label="Коттедж Інвест — на головну">
-    <img src="/brand-mark.svg" alt="" width="42" height="42" decoding="async">
+    <img src="${asset('/brand-mark.svg')}" alt="" width="42" height="42" decoding="async">
     <span><b>КОТТЕДЖ</b><b>ІНВЕСТ</b></span>
   </a>
 `
@@ -526,7 +528,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="footer__bottom"><span>© ${copy.footer.rights}</span><span>${copy.footer.privacy}</span><span>KH · UA</span></div>
       </div>
     </footer>
-  `
+  `.replace(/src="\/(images|videos|brand-mark\.svg|favicon\.svg)\//g, `src="${import.meta.env.BASE_URL}$1/`)
 }
 
 const select = <T extends Element>(selector: string, root: ParentNode = document): T => {
@@ -1041,6 +1043,6 @@ window.setTimeout(dismissLoader, 1800)
 const heroImg = new Image()
 heroImg.onload = dismissLoader
 heroImg.onerror = dismissLoader
-heroImg.src = content[locale].hero.image
+heroImg.src = asset(content[locale].hero.image)
 if (document.readyState === 'complete') dismissLoader()
 else window.addEventListener('load', dismissLoader, { once: true })
