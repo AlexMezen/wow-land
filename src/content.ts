@@ -279,7 +279,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
           body: 'Матеріали, світло, сантехніка й меблі збираються у простір, який виглядає продуманим до дрібниць.',
           metric: '4 етапи',
           metricLabel: 'поетапного приймання',
-          image: '/images/arch-spa.webp',
+          image: '/images/gallery-built-to-last.webp',
           tag: '03 · ОЗДОБЛЕННЯ'
         },
         {
@@ -520,7 +520,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
           body: 'Materials, lighting, sanitary ware and furniture come together into a space considered down to the details.',
           metric: '4 stages',
           metricLabel: 'of staged acceptance',
-          image: '/images/arch-spa.webp',
+          image: '/images/gallery-built-to-last.webp',
           tag: '03 · FINISHING'
         },
         {
