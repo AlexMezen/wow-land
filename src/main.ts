@@ -843,18 +843,17 @@ const setupAnimations = (): (() => void) => {
       const storyTimeline = gsap.timeline({
         scrollTrigger: {
           trigger: '.story__formation',
-          start: 'top 105%',
-          end: 'center 65%',
-          scrub: 0.6,
-          onUpdate: (self) => {
-            if (storyCounter) storyCounter.textContent = String(Math.max(1, Math.ceil(self.progress * 3))).padStart(2, '0')
-          }
+          start: 'top 68%',
+          once: true
         }
       })
-      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.2, stagger: 0.05, ease: 'power2.out' }, 0)
-      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, stagger: 0.06, ease: 'power2.out' }, 0.1)
-      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.8)
-      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.9)
+      storyTimeline.eventCallback('onUpdate', () => {
+        if (storyCounter) storyCounter.textContent = String(Math.max(1, Math.ceil(storyTimeline.progress() * 3))).padStart(2, '0')
+      })
+      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.1, stagger: 0.05, ease: 'power2.out' }, 0)
+      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, stagger: 0.06, ease: 'power2.out' }, 0.1)
+      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.7)
+      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.8)
       gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
         yPercent: 9,
         scale: 1.02,
