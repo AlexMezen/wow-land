@@ -836,7 +836,8 @@ const setupAnimations = (): (() => void) => {
 
     const storyWords = gsap.utils.toArray<HTMLElement>('.story-word')
     const storyCounter = document.querySelector<HTMLElement>('.story__counter span')
-    if (!reducedMotion && storyWords.length > 0) {
+    const isMobileViewport = window.innerWidth <= 820
+    if (!reducedMotion && storyWords.length > 0 && !isMobileViewport) {
       gsap.set(storyWords, { opacity: 0.08, yPercent: 65, rotateX: -70, filter: 'blur(12px)', transformOrigin: '50% 100%' })
       gsap.set(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 35 })
       const storyTimeline = gsap.timeline({
@@ -854,6 +855,27 @@ const setupAnimations = (): (() => void) => {
       storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, stagger: 0.06, ease: 'power2.out' }, 0.1)
       storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.8)
       storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.9)
+      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
+        yPercent: 9,
+        scale: 1.02,
+        ease: 'none',
+        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
+      })
+    } else if (!reducedMotion && storyWords.length > 0) {
+      gsap.fromTo('.story__forming-title', { opacity: 0, y: 34 }, {
+        opacity: 1,
+        y: 0,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '.story__formation', start: 'top 72%', once: true }
+      })
+      gsap.fromTo(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 26 }, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        scrollTrigger: { trigger: '.story__formation', start: 'top 62%', once: true }
+      })
       gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
         yPercent: 9,
         scale: 1.02,

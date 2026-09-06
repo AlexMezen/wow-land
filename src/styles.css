@@ -4202,7 +4202,8 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .story__forming-title {
-    font-size: clamp(39px, 8.7vw, 69px);
+    font-size: clamp(30px, 7vw, 52px);
+    line-height: 1.12;
   }
 
   .story__shape {
@@ -4366,12 +4367,12 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .story__counter {
-    margin-bottom: 4vh;
+    display: none;
   }
 
   .story__forming-title {
-    font-size: clamp(32px, 9.6vw, 48px);
-    line-height: 1.08;
+    font-size: clamp(26px, 8vw, 42px);
+    line-height: 1.12;
   }
 
   .story__forming-bottom {
