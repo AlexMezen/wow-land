@@ -1,10 +1,10 @@
 import './styles.css'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { content, type Locale, type SiteCopy } from './content'
-import { calculateProjection, formatCurrency, formatPercent } from './investment'
-import { track } from './analytics'
-import type { CottageSceneController } from './scene'
+import { content, loadContent, type Locale, type SiteCopy } from './content'
+import { calculateEstimate, formatArea, formatCurrency } from './estimate'
+import { initAnalytics, track } from './analytics'
+import type { InteriorSceneController } from './scene'
 
 gsap.registerPlugin(ScrollTrigger)
 ScrollTrigger.config({ ignoreMobileResize: true })
@@ -14,6 +14,20 @@ const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')
 const loader = document.querySelector<HTMLElement>('#loader')
 
 if (!app || !canvas) throw new Error('Application root is missing')
+
+const LEADS_ENDPOINT = '/api/leads'
+const LEADS_STORAGE_KEY = 'elitstroy-leads'
+const LEADS_ENDPOINT_KEY = 'elitstroy-leads-endpoint'
+
+type Lead = {
+  id: string
+  ts: number
+  locale: Locale
+  name: string
+  contact: string
+  interest: string
+  messenger: string
+}
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
@@ -32,21 +46,28 @@ window.addEventListener('orientationchange', () => window.setTimeout(() => {
   syncViewportHeight(true)
   ScrollTrigger.refresh()
 }, 280))
-let locale: Locale = localStorage.getItem('cottage-invest-locale') === 'en' ? 'en' : 'uk'
-let sceneController: CottageSceneController | null = null
+let locale: Locale = localStorage.getItem('elitstroy-locale') === 'en' ? 'en' : 'uk'
+let siteContent: Record<Locale, SiteCopy> = content
+let sceneController: InteriorSceneController | null = null
 let cleanPage = (): void => undefined
 let loaderDismissed = false
 
 const arrowIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg>'
 const cornerIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M7 5h8v8"/></svg>'
 const checkIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-9"/></svg>'
+const telegramIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.91 3.79 20.3 20.84c-.25 1.21-.98 1.5-2 .94l-5.5-4.07-2.66 2.57c-.3.3-.55.56-1.1.56-.72 0-.6-.27-.84-.95L6.3 13.7l-5.45-1.7c-1.18-.35-1.19-1.16.26-1.75l21.26-8.2c.97-.43 1.9.24 1.53 1.73z"/></svg>'
+const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2a9.9 9.9 0 0 0-8.4 15.2L2 22l4.9-1.6A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 1 1-4.1 15.1l-.3-.2-2.9 1 1-2.8-.2-.3A8.1 8.1 0 0 1 12.04 3.8Zm-3.3 3.6c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.2.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-2-1c-.3-.1-.5-.2-.7.1l-1 1.2c-.2.2-.4.2-.6.1a8 8 0 0 1-2.4-1.5 8.8 8.8 0 0 1-1.6-2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.6l-.9-2c-.2-.5-.4-.4-.6-.4h-.6Z"/></svg>'
+const viberIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.5 2 2 5.9 2 10.7c0 2.6 1.3 4.9 3.4 6.5v4.3l3.9-2.1c.9.2 1.8.3 2.7.3 5.5 0 10-3.9 10-8.9S17.5 2 12 2Zm.2 2c1.9 0 3.8.6 5.2 1.9a6.7 6.7 0 0 1 2.3 5.2c0 1.9-.8 3.7-2.3 5a7.6 7.6 0 0 1-5.2 1.8l-.8-.1-2.4 1.3v-2.3l-.6-.4A6.6 6.6 0 0 1 5.3 11c0-1.9.8-3.7 2.3-5A7.6 7.6 0 0 1 12.2 4Zm-2.5 2.7c-.2 0-.5.1-.7.4-.3.3-.8.9-.8 1.9 0 1 .7 2 .8 2.2.1.2 1.4 2.3 3.5 3.1 1.7.7 2.1.6 2.5.5.5 0 1.1-.5 1.3-1 .2-.4.2-.8.1-.9l-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.3 6.3 0 0 1-1.8-1.2 6.7 6.7 0 0 1-1.2-1.6c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.2-.5l-.7-1.7c-.1-.3-.3-.3-.5-.3h-.3Z"/></svg>'
 
-const asset = (path: string): string => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+const asset = (path: string): string => {
+  if (/^(https?:)?\/\//.test(path) || path.startsWith(import.meta.env.BASE_URL)) return path
+  return `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+}
 
-const brand = (): string => `
-  <a class="brand" href="#top" aria-label="Коттедж Інвест — на головну">
-    <img src="${asset('/brand-mark.svg')}" alt="" width="42" height="42" decoding="async">
-    <span><b>КОТТЕДЖ</b><b>ІНВЕСТ</b></span>
+const brand = (copy: SiteCopy): string => `
+  <a class="brand" href="#top" aria-label="${copy.metaTitle}">
+    <img src="${asset(copy.brand.image)}" alt="" width="42" height="42" decoding="async">
+    <span><b>${copy.brand.top}</b><b>${copy.brand.bottom}</b></span>
   </a>
 `
 
@@ -57,12 +78,15 @@ const buttonLink = (href: string, label: string, variant = 'button--primary'): s
 `
 
 const createMarkup = (copy: SiteCopy): string => {
-  const strategyButtons = copy.investment.strategies.map((strategy, index) => `
-    <button class="strategy-card${index === 1 ? ' is-active' : ''}" type="button" data-strategy="${strategy.id}" data-yield="${strategy.yield}" data-growth="${strategy.growth}" aria-pressed="${index === 1}">
+  const renovationCards = copy.estimate.renovationTypes.map((type) => `
+    <button class="strategy-card${type.id === 'turnkey' ? ' is-active' : ''}" type="button" data-renovation="${type.id}" data-price="${type.pricePerSqm}" data-weeks="${type.weeksPerSqm}" aria-pressed="${type.id === 'turnkey'}">
       <span class="strategy-card__radio"></span>
-      <span><b>${strategy.name}</b><small>${strategy.description}</small></span>
-      <strong>${strategy.yield}%</strong>
+      <span><b>${type.name}</b><small>${type.description}</small></span>
+      <strong>$${type.pricePerSqm}/${copy.estimate.areaUnit}</strong>
     </button>
+  `).join('')
+  const conditionButtons = copy.estimate.conditions.map((condition, index) => `
+    <button type="button" data-condition="${condition.id}" data-multiplier="${condition.multiplier}"${index === 1 ? ' class="is-active"' : ''}>${condition.name}</button>
   `).join('')
 
   const storyWords = copy.story.title.split(' ').map((word, index) => `<span class="story-word" data-word="${index}">${word}</span>`).join(' ')
@@ -125,11 +149,11 @@ const createMarkup = (copy: SiteCopy): string => {
     <div class="site-progress" aria-hidden="true"><span></span></div>
     <header class="site-header" id="site-header">
       <div class="site-header__inner">
-        ${brand()}
+        ${brand(copy)}
         <nav class="desktop-nav" aria-label="${locale === 'uk' ? 'Головна навігація' : 'Main navigation'}">
           <a href="#story">${copy.nav.story}</a>
           <a href="#architecture">${copy.nav.architecture}</a>
-          <a href="#investment">${copy.nav.investment}</a>
+          <a href="#estimate">${copy.nav.estimate}</a>
           <a href="#process">${copy.nav.process}</a>
         </nav>
         <div class="header-actions">
@@ -146,7 +170,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <nav>
           <a href="#story"><span>01</span>${copy.nav.story}</a>
           <a href="#architecture"><span>02</span>${copy.nav.architecture}</a>
-          <a href="#investment"><span>03</span>${copy.nav.investment}</a>
+          <a href="#estimate"><span>03</span>${copy.nav.estimate}</a>
           <a href="#process"><span>04</span>${copy.nav.process}</a>
           <a href="#contact"><span>05</span>${copy.nav.contact}</a>
         </nav>
@@ -175,7 +199,7 @@ const createMarkup = (copy: SiteCopy): string => {
             <p class="hero__lead hero-animate">${copy.hero.lead}</p>
             <div class="hero__actions hero-animate">
               ${buttonLink('#contact', copy.hero.primary)}
-              ${buttonLink('#investment', copy.hero.secondary, 'button--ghost')}
+              ${buttonLink('#estimate', copy.hero.secondary, 'button--ghost')}
             </div>
           </div>
           <div class="hero__stats hero-animate">
@@ -190,10 +214,13 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="container">
           <div class="section-head reveal">
             <p class="eyebrow"><span>01</span>${copy.story.eyebrow}</p>
-            <p class="section-index">APPROACH / FORM—VALUE</p>
+            <p class="section-index">APPROACH / PLAN—RESULT</p>
           </div>
         </div>
         <div class="story__formation">
+          <div class="story__formation-bg" aria-hidden="true">
+            <img src="${asset(copy.story.formationImage)}" alt="" loading="lazy" decoding="async" width="1280" height="720">
+          </div>
           <div class="story__sticky">
             <div class="story__shape" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div>
             <div class="container story__formation-copy">
@@ -203,12 +230,11 @@ const createMarkup = (copy: SiteCopy): string => {
                 <p class="story__forming-lead">${copy.story.lead}</p>
                 <blockquote><span>“</span>${copy.story.quote}</blockquote>
               </div>
-              <div class="story__formation-progress"><i></i><span>FORMING VALUE</span></div>
             </div>
           </div>
         </div>
         <div class="container">
-          <div class="story__cards-head reveal"><p>THREE LAYERS / ONE ASSET</p><span>01—03</span></div>
+          <div class="story__cards-head reveal"><p>THREE LAYERS / ONE RESULT</p><span>01—03</span></div>
           <div class="story__cards">
             ${copy.story.cards.map((card) => `
               <article class="story-card reveal">
@@ -228,7 +254,7 @@ const createMarkup = (copy: SiteCopy): string => {
       </section>
 
       <section class="value-system" id="value-system" data-scene="hidden">
-        <div class="value-system__marquee" aria-hidden="true"><span>LAND · DESIGN · DELIVERY · OPERATIONS · DATA · </span><span>LAND · DESIGN · DELIVERY · OPERATIONS · DATA · </span></div>
+        <div class="value-system__marquee" aria-hidden="true"><span>${copy.value.marquee}</span><span>${copy.value.marquee}</span></div>
         <div class="container">
           <div class="section-head section-head--dark reveal">
             <p class="eyebrow"><span>02</span>${copy.value.eyebrow}</p>
@@ -265,7 +291,7 @@ const createMarkup = (copy: SiteCopy): string => {
               <div class="stage-hud">
                 <div class="stage-hud__item">
                   <span>MODEL</span>
-                  <b>CONCEPT 01 / A—FRAME</b>
+                  <b>CONCEPT 01 / STUDIO—FLAT</b>
                 </div>
                 <div class="stage-hud__item">
                   <span>ACTIVE LAYER</span>
@@ -327,50 +353,46 @@ const createMarkup = (copy: SiteCopy): string => {
         </div>
       </section>
 
-      <section class="investment" id="investment" data-scene="hidden">
+      <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>05</span>${copy.investment.eyebrow}</p>
-            <p class="section-index">MODEL / ROI—SIMULATION</p>
+            <p class="eyebrow"><span>05</span>${copy.estimate.eyebrow}</p>
+            <p class="section-index">ESTIMATE / COST—SIMULATION</p>
           </div>
           <div class="investment__heading">
-            <h2 class="display-title split-reveal">${copy.investment.title}</h2>
-            <p class="reveal">${copy.investment.intro}</p>
+            <h2 class="display-title split-reveal">${copy.estimate.title}</h2>
+            <p class="reveal">${copy.estimate.intro}</p>
           </div>
           <div class="calculator reveal" id="calculator">
             <div class="calculator__controls">
               <div class="control-group">
-                <div class="control-label"><label for="capital">${copy.investment.capital}</label><output id="capital-display">$150,000</output></div>
-                <input id="capital" type="range" min="50000" max="500000" step="10000" value="150000" aria-label="${copy.investment.capital}">
-                <div class="range-limits"><span>$50K</span><span>$500K</span></div>
+                <div class="control-label"><label for="area">${copy.estimate.area}</label><output id="area-display">60 ${copy.estimate.areaUnit}</output></div>
+                <input id="area" type="range" min="20" max="200" step="5" value="60" aria-label="${copy.estimate.area}">
+                <div class="range-limits"><span>20 ${copy.estimate.areaUnit}</span><span>200 ${copy.estimate.areaUnit}</span></div>
               </div>
               <fieldset class="control-group">
-                <legend>${copy.investment.term}</legend>
-                <div class="term-buttons">
-                  <button type="button" data-months="12">12 ${copy.investment.months}</button>
-                  <button type="button" data-months="24" class="is-active">24 ${copy.investment.months}</button>
-                  <button type="button" data-months="36">36 ${copy.investment.months}</button>
-                </div>
+                <legend>${copy.estimate.condition}</legend>
+                <div class="term-buttons">${conditionButtons}</div>
               </fieldset>
               <fieldset class="control-group strategy-group">
-                <legend>${copy.investment.strategy}</legend>
-                <div class="strategy-list">${strategyButtons}</div>
+                <legend>${copy.estimate.renovation}</legend>
+                <div class="strategy-list">${renovationCards}</div>
               </fieldset>
             </div>
             <div class="calculator__result">
-              <div class="result-head"><p class="eyebrow">${copy.investment.estimate}</p><span>USD · DEMO</span></div>
+              <div class="result-head"><p class="eyebrow">${copy.estimate.estimateLabel}</p><span>USD · DEMO</span></div>
               <div class="roi-orbit" id="roi-orbit">
-                <div><small>${copy.investment.roi}</small><strong id="roi-result">33.2%</strong><span>24 ${copy.investment.months}</span></div>
+                <div><small>${copy.estimate.total}</small><strong id="total-result">$31,200</strong><span id="orbit-context">60 ${copy.estimate.areaUnit}</span></div>
                 <i></i><i></i><i></i>
               </div>
               <dl class="result-list">
-                <div><dt>${copy.investment.invested}</dt><dd id="invested-result">$150,000</dd></div>
-                <div><dt>${copy.investment.income}</dt><dd id="profit-result">+$49,800</dd></div>
-                <div><dt>${copy.investment.value}</dt><dd id="value-result">$199,800</dd></div>
+                <div><dt>${copy.estimate.area}</dt><dd id="area-result">60 ${copy.estimate.areaUnit}</dd></div>
+                <div><dt>${copy.estimate.perSqm}</dt><dd id="per-sqm-result">$520</dd></div>
+                <div><dt>${copy.estimate.timeline}</dt><dd id="weeks-result">9–11 ${copy.estimate.weeksUnit}</dd></div>
               </dl>
             </div>
           </div>
-          <p class="calculator-disclaimer reveal"><span>i</span>${copy.investment.disclaimer}</p>
+          <p class="calculator-disclaimer reveal"><span>i</span>${copy.estimate.disclaimer}</p>
         </div>
       </section>
 
@@ -400,7 +422,7 @@ const createMarkup = (copy: SiteCopy): string => {
                   <div class="assurance-step__top"><span>${metric.value}</span><small>${index === copy.assurance.metrics.length - 1 ? 'RESULT' : 'CHECKPOINT'}</small></div>
                   <h3>${metric.label}</h3>
                   <p>${metric.detail}</p>
-                  <div class="assurance-step__status"><i></i><span>${index === 0 ? 'FRAME' : index === 1 ? 'ROUTE' : index === 2 ? 'QUALITY' : 'PERFORMANCE'}</span><b>${String((index + 1) * 25).padStart(2, '0')}%</b></div>
+                  <div class="assurance-step__status"><i></i><span>${index === 0 ? 'BUDGET' : index === 1 ? 'SCHEDULE' : index === 2 ? 'QUALITY' : 'WARRANTY'}</span><b>${String((index + 1) * 25).padStart(2, '0')}%</b></div>
                 </article>
               `).join('')}
             </div>
@@ -475,7 +497,8 @@ const createMarkup = (copy: SiteCopy): string => {
                 </div>
               </div>
               <div class="map-card">
-                <img class="map-card__bg" src="${copy.contact.mapImage}" alt="${copy.contact.mapLabel}" loading="lazy" decoding="async" width="800" height="600">
+                <img class="map-card__bg" src="${copy.contact.mapImage}" alt="" loading="lazy" decoding="async" width="800" height="600">
+                <iframe class="map-card__map" src="${copy.contact.mapEmbedUrl}" loading="lazy" title="${copy.contact.mapLabel}" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
                 <div class="map-card__overlay"></div>
                 <div class="map-pin"><span>KH</span><i></i></div>
                 <div class="map-card__meta">
@@ -524,10 +547,16 @@ const createMarkup = (copy: SiteCopy): string => {
 
     <footer class="site-footer">
       <div class="container">
-        <div class="footer__top">${brand()}<p>${copy.footer.line}</p><a href="#top" aria-label="Back to top">↑</a></div>
+        <div class="footer__top">${brand(copy)}<p>${copy.footer.line}</p><a href="#top" aria-label="Back to top">↑</a></div>
         <div class="footer__bottom"><span>© ${copy.footer.rights}</span><span>${copy.footer.privacy}</span><span>KH · UA</span></div>
       </div>
     </footer>
+
+    <div class="messenger-fab" aria-label="Messengers">
+      <a class="messenger-fab__btn" href="${copy.contact.telegram}" target="_blank" rel="noopener" data-fab-messenger="Telegram" aria-label="Telegram">${telegramIcon}</a>
+      <a class="messenger-fab__btn" href="${copy.contact.whatsapp}" target="_blank" rel="noopener" data-fab-messenger="WhatsApp" aria-label="WhatsApp">${whatsappIcon}</a>
+      <a class="messenger-fab__btn" href="${copy.contact.viber}" data-fab-messenger="Viber" aria-label="Viber">${viberIcon}</a>
+    </div>
   `.replace(/src="\/(images|videos|brand-mark\.svg|favicon\.svg)\//g, `src="${import.meta.env.BASE_URL}$1/`)
 }
 
@@ -538,71 +567,97 @@ const select = <T extends Element>(selector: string, root: ParentNode = document
 }
 
 const setupCalculator = (): (() => void) => {
-  const capital = select<HTMLInputElement>('#capital')
-  const capitalDisplay = select<HTMLOutputElement>('#capital-display')
-  const roiResult = select<HTMLElement>('#roi-result')
-  const investedResult = select<HTMLElement>('#invested-result')
-  const profitResult = select<HTMLElement>('#profit-result')
-  const valueResult = select<HTMLElement>('#value-result')
+  const area = select<HTMLInputElement>('#area')
+  const areaDisplay = select<HTMLOutputElement>('#area-display')
+  const totalResult = select<HTMLElement>('#total-result')
+  const areaResult = select<HTMLElement>('#area-result')
+  const perSqmResult = select<HTMLElement>('#per-sqm-result')
+  const weeksResult = select<HTMLElement>('#weeks-result')
+  const orbitContext = select<HTMLElement>('#orbit-context')
   const orbit = select<HTMLElement>('#roi-orbit')
-  const termButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-months]')]
-  const strategyButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-strategy]')]
-  let months = 24
-  let annualYield = 12.4
-  let annualGrowth = 4.2
+  const conditionButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-condition]')]
+  const renovationButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-renovation]')]
+  let conditionMultiplier = 1.18
+  let pricePerSqm = 520
+  let weeksPerSqm = 0.14
 
   const update = (shouldTrack = true): void => {
-    const principal = Number(capital.value)
-    const projection = calculateProjection({
-      principal,
-      months,
-      annualYieldPercent: annualYield,
-      annualAppreciationPercent: annualGrowth
+    const areaValue = Number(area.value)
+    const estimate = calculateEstimate({
+      area: areaValue,
+      pricePerSqm,
+      conditionMultiplier,
+      weeksPerSqm
     })
-    const rangeProgress = ((principal - Number(capital.min)) / (Number(capital.max) - Number(capital.min))) * 100
-    capital.style.setProperty('--range-progress', `${rangeProgress}%`)
-    capitalDisplay.value = formatCurrency(principal, locale)
-    investedResult.textContent = formatCurrency(principal, locale)
-    profitResult.textContent = `+${formatCurrency(projection.profit, locale)}`
-    valueResult.textContent = formatCurrency(projection.projectedValue, locale)
-    roiResult.textContent = formatPercent(projection.roiPercent)
-    orbit.style.setProperty('--roi-angle', `${Math.min(100, projection.roiPercent) * 3.6}deg`)
+    const rangeProgress = ((areaValue - Number(area.min)) / (Number(area.max) - Number(area.min))) * 100
+    area.style.setProperty('--range-progress', `${rangeProgress}%`)
+    areaDisplay.value = formatArea(areaValue, locale)
+    totalResult.textContent = formatCurrency(estimate.total, locale)
+    areaResult.textContent = formatArea(areaValue, locale)
+    perSqmResult.textContent = formatCurrency(estimate.perSqm, locale)
+    weeksResult.textContent = `${estimate.weeks}–${estimate.weeks + 2} ${siteContent[locale].estimate.weeksUnit}`
+    orbitContext.textContent = formatArea(areaValue, locale)
+    orbit.style.setProperty('--roi-angle', `${Math.min(100, (estimate.perSqm / 650) * 100) * 3.6}deg`)
     if (!reducedMotion) {
-      gsap.fromTo([roiResult, profitResult, valueResult], { y: 5, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, stagger: 0.03 })
+      gsap.fromTo([totalResult, perSqmResult, weeksResult], { y: 5, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, stagger: 0.03 })
     }
-    if (shouldTrack) track('calculator_change', { principal, months, strategyYield: annualYield })
+    if (shouldTrack) track('calculator_change', { area: areaValue, pricePerSqm, conditionMultiplier })
   }
 
-  const onCapital = (): void => update(false)
-  const onCapitalChange = (): void => update(true)
-  capital.addEventListener('input', onCapital)
-  capital.addEventListener('change', onCapitalChange)
+  const onArea = (): void => update(false)
+  const onAreaChange = (): void => update(true)
+  area.addEventListener('input', onArea)
+  area.addEventListener('change', onAreaChange)
 
-  termButtons.forEach((button) => {
+  conditionButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      termButtons.forEach((item) => item.classList.toggle('is-active', item === button))
-      months = Number(button.dataset.months)
+      conditionButtons.forEach((item) => item.classList.toggle('is-active', item === button))
+      conditionMultiplier = Number(button.dataset.multiplier)
       update()
     })
   })
 
-  strategyButtons.forEach((button) => {
+  renovationButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      strategyButtons.forEach((item) => {
+      renovationButtons.forEach((item) => {
         const active = item === button
         item.classList.toggle('is-active', active)
         item.setAttribute('aria-pressed', String(active))
       })
-      annualYield = Number(button.dataset.yield)
-      annualGrowth = Number(button.dataset.growth)
+      pricePerSqm = Number(button.dataset.price)
+      weeksPerSqm = Number(button.dataset.weeks)
       update()
     })
   })
 
   update(false)
   return () => {
-    capital.removeEventListener('input', onCapital)
-    capital.removeEventListener('change', onCapitalChange)
+    area.removeEventListener('input', onArea)
+    area.removeEventListener('change', onAreaChange)
+  }
+}
+
+const saveLead = (lead: Lead): void => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(LEADS_STORAGE_KEY) ?? '[]') as Lead[]
+    stored.unshift(lead)
+    localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(stored.slice(0, 200)))
+  } catch {
+    localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify([lead]))
+  }
+  const endpoint = localStorage.getItem(LEADS_ENDPOINT_KEY) ?? LEADS_ENDPOINT
+  if (endpoint) {
+    const sameOrigin = endpoint.startsWith('/')
+    void fetch(endpoint, sameOrigin ? {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead)
+    } : {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(lead)
+    }).catch(() => undefined)
   }
 }
 
@@ -633,7 +688,17 @@ const setupForm = (copy: SiteCopy): (() => void) => {
   const onSubmit = (event: SubmitEvent): void => {
     event.preventDefault()
     if (!validate()) return
-    track('form_submit', { messenger: messengerInput.value, demo: true })
+    const lead: Lead = {
+      id: `lead-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      ts: Date.now(),
+      locale,
+      name: select<HTMLInputElement>('input[name="name"]', form).value.trim(),
+      contact: select<HTMLInputElement>('input[name="contact"]', form).value.trim(),
+      interest: select<HTMLSelectElement>('#interest', form).value,
+      messenger: messengerInput.value
+    }
+    saveLead(lead)
+    track('form_submit', { messenger: lead.messenger, interest: lead.interest })
     form.hidden = true
     success.hidden = false
     if (!reducedMotion) gsap.fromTo(success, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
@@ -661,6 +726,19 @@ const setupForm = (copy: SiteCopy): (() => void) => {
     form.removeEventListener('submit', onSubmit)
     reset.removeEventListener('click', onReset)
   }
+}
+
+const setupMessengerFab = (): (() => void) => {
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-fab-messenger]')]
+  const handlers = new Map<HTMLAnchorElement, () => void>()
+  links.forEach((link) => {
+    const handler = (): void => {
+      track('messenger_select', { messenger: link.dataset.fabMessenger ?? '', source: 'fab' })
+    }
+    handlers.set(link, handler)
+    link.addEventListener('click', handler)
+  })
+  return () => handlers.forEach((handler, link) => link.removeEventListener('click', handler))
 }
 
 const setupFaq = (): (() => void) => {
@@ -758,28 +836,30 @@ const setupAnimations = (): (() => void) => {
 
     const storyWords = gsap.utils.toArray<HTMLElement>('.story-word')
     const storyCounter = document.querySelector<HTMLElement>('.story__counter span')
-    const storyProgress = document.querySelector<HTMLElement>('.story__formation-progress i')
     if (!reducedMotion && storyWords.length > 0) {
       gsap.set(storyWords, { opacity: 0.08, yPercent: 65, rotateX: -70, filter: 'blur(12px)', transformOrigin: '50% 100%' })
       gsap.set(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 35 })
       const storyTimeline = gsap.timeline({
         scrollTrigger: {
           trigger: '.story__formation',
-          start: 'top top',
-          end: 'bottom bottom',
-          pin: '.story__sticky',
-          scrub: 0.7,
-          anticipatePin: 1,
+          start: 'top 105%',
+          end: 'center 65%',
+          scrub: 0.6,
           onUpdate: (self) => {
             if (storyCounter) storyCounter.textContent = String(Math.max(1, Math.ceil(self.progress * 3))).padStart(2, '0')
-            if (storyProgress) gsap.set(storyProgress, { scaleX: self.progress })
           }
         }
       })
-      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.8, stagger: 0.075, ease: 'power2.out' }, 0)
-      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.8, stagger: 0.08, ease: 'power2.out' }, 0.1)
-      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 1.15)
-      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.8, stagger: 0.12 }, 1.25)
+      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.2, stagger: 0.05, ease: 'power2.out' }, 0)
+      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, stagger: 0.06, ease: 'power2.out' }, 0.1)
+      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.8)
+      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.9)
+      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
+        yPercent: 9,
+        scale: 1.02,
+        ease: 'none',
+        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
+      })
     }
 
     ScrollTrigger.create({
@@ -808,8 +888,8 @@ const setupAnimations = (): (() => void) => {
       })
       sidePhotosLeft.forEach((photo, i) => photo.classList.toggle('is-active', i === idx))
       sidePhotosRight.forEach((photo, i) => photo.classList.toggle('is-active', i === (idx + 1) % sidePhotosRight.length))
-      if (stageLayerName && content[locale].architecture.chapters[idx]) {
-        stageLayerName.textContent = content[locale].architecture.chapters[idx].tag
+      if (stageLayerName && siteContent[locale].architecture.chapters[idx]) {
+        stageLayerName.textContent = siteContent[locale].architecture.chapters[idx].tag
       }
     }
 
@@ -846,7 +926,7 @@ const setupAnimations = (): (() => void) => {
           anticipatePin: 1,
           onUpdate: (self) => {
             galleryStatus?.style.setProperty('--gallery-progress', `${self.progress * 100}%`)
-            if (galleryCurrent) galleryCurrent.textContent = String(Math.min(content[locale].gallery.items.length, Math.floor(self.progress * content[locale].gallery.items.length) + 1)).padStart(2, '0')
+            if (galleryCurrent) galleryCurrent.textContent = String(Math.min(siteContent[locale].gallery.items.length, Math.floor(self.progress * siteContent[locale].gallery.items.length) + 1)).padStart(2, '0')
           }
         }
       })
@@ -857,9 +937,10 @@ const setupAnimations = (): (() => void) => {
     const assuranceProgress = document.querySelector<HTMLElement>('#assurance-progress')
     const assuranceOrbit = document.querySelector<HTMLElement>('.assurance-orbit')
     assuranceSteps.forEach((step, index) => {
+      const mobile = window.innerWidth <= 820
       ScrollTrigger.create({
         trigger: step,
-        start: 'top 62%',
+        start: mobile ? 'top 76%' : 'top 62%',
         end: 'bottom 38%',
         onToggle: (self) => {
           if (!self.isActive) return
@@ -870,11 +951,12 @@ const setupAnimations = (): (() => void) => {
         }
       })
       if (!reducedMotion) {
-        gsap.fromTo(step, { xPercent: index % 2 === 0 ? 12 : -8, opacity: 0.18 }, {
+        const mobile = window.innerWidth <= 820
+        gsap.fromTo(step, { xPercent: mobile ? 0 : index % 2 === 0 ? 12 : -8, opacity: 0.18 }, {
           xPercent: 0,
           opacity: 1,
           ease: 'none',
-          scrollTrigger: { trigger: step, start: 'top 92%', end: 'top 52%', scrub: 0.7 }
+          scrollTrigger: { trigger: step, start: mobile ? 'top 96%' : 'top 92%', end: mobile ? 'top 68%' : 'top 52%', scrub: 0.7 }
         })
       }
     })
@@ -961,7 +1043,7 @@ const setupLocale = (): (() => void) => {
       const next = button.dataset.locale as Locale
       if (next === locale) return
       locale = next
-      localStorage.setItem('cottage-invest-locale', locale)
+      localStorage.setItem('elitstroy-locale', locale)
       track('language_change', { locale })
       renderPage()
     }
@@ -991,14 +1073,15 @@ const renderPage = (): void => {
   cleanPage()
   document.body.classList.remove('menu-open')
   document.documentElement.lang = locale
-  document.title = content[locale].metaTitle
-  document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', content[locale].metaDescription)
-  app.innerHTML = createMarkup(content[locale])
+  document.title = siteContent[locale].metaTitle
+  document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', siteContent[locale].metaDescription)
+  app.innerHTML = createMarkup(siteContent[locale])
 
   const cleanups = [
     setupNavigation(),
     setupCalculator(),
-    setupForm(content[locale]),
+    setupForm(siteContent[locale]),
+    setupMessengerFab(),
     setupFaq(),
     setupPointerHud(),
     setupAnimations(),
@@ -1008,41 +1091,49 @@ const renderPage = (): void => {
   if (scrollPosition > 0) requestAnimationFrame(() => window.scrollTo(0, scrollPosition))
 }
 
-renderPage()
+const bootstrap = async (): Promise<void> => {
+  siteContent = await loadContent()
+  initAnalytics()
+  const loaderImage = loader?.querySelector('img')
+  if (loaderImage) loaderImage.src = asset(siteContent[locale].brand.image)
+  renderPage()
 
-if (webGLAllowed) {
-  const architecture = select<HTMLElement>('#architecture')
-  let sceneRequested = false
-  const loadScene = (): void => {
-    if (sceneRequested) return
-    sceneRequested = true
-    import('./scene')
-      .then(({ createCottageScene }) => {
-        sceneController = createCottageScene(canvas, reducedMotion)
-        document.body.classList.add('has-webgl')
-        const bounds = architecture.getBoundingClientRect()
-        sceneController.setMode(bounds.top < window.innerHeight && bounds.bottom > 0 ? 'architecture' : 'hidden')
-        ScrollTrigger.refresh()
-      })
-      .catch(() => document.body.classList.add('no-webgl'))
+  if (webGLAllowed) {
+    const architecture = select<HTMLElement>('#architecture')
+    let sceneRequested = false
+    const loadScene = (): void => {
+      if (sceneRequested) return
+      sceneRequested = true
+      import('./scene')
+        .then(({ createInteriorScene }) => {
+          sceneController = createInteriorScene(canvas, reducedMotion)
+          document.body.classList.add('has-webgl')
+          const bounds = architecture.getBoundingClientRect()
+          sceneController.setMode(bounds.top < window.innerHeight && bounds.bottom > 0 ? 'architecture' : 'hidden')
+          ScrollTrigger.refresh()
+        })
+        .catch(() => document.body.classList.add('no-webgl'))
+    }
+    const sceneObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      sceneObserver.disconnect()
+      loadScene()
+    }, { rootMargin: '120% 0px' })
+    sceneObserver.observe(architecture)
+    window.setTimeout(loadScene, 4500)
+  } else {
+    canvas.remove()
+    document.body.classList.add('no-webgl')
   }
-  const sceneObserver = new IntersectionObserver((entries) => {
-    if (!entries.some((entry) => entry.isIntersecting)) return
-    sceneObserver.disconnect()
-    loadScene()
-  }, { rootMargin: '120% 0px' })
-  sceneObserver.observe(architecture)
-  window.setTimeout(loadScene, 4500)
-} else {
-  canvas.remove()
-  document.body.classList.add('no-webgl')
+
+  dismissLoader()
+  window.setTimeout(dismissLoader, 1800)
+  const heroImg = new Image()
+  heroImg.onload = dismissLoader
+  heroImg.onerror = dismissLoader
+  heroImg.src = asset(siteContent[locale].hero.image)
+  if (document.readyState === 'complete') dismissLoader()
+  else window.addEventListener('load', dismissLoader, { once: true })
 }
 
-dismissLoader()
-window.setTimeout(dismissLoader, 1800)
-const heroImg = new Image()
-heroImg.onload = dismissLoader
-heroImg.onerror = dismissLoader
-heroImg.src = asset(content[locale].hero.image)
-if (document.readyState === 'complete') dismissLoader()
-else window.addEventListener('load', dismissLoader, { once: true })
+void bootstrap()

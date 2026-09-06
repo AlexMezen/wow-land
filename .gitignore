@@ -4,3 +4,4 @@ dist
 *.local
 *.pdf
 .devin/
+data/

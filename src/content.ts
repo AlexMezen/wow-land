@@ -23,12 +23,18 @@ type ProcessStep = {
   image: string
 }
 
-type Strategy = {
-  id: 'income' | 'balanced' | 'growth'
+type RenovationType = {
+  id: 'cosmetic' | 'capital' | 'turnkey'
   name: string
   description: string
-  yield: number
-  growth: number
+  pricePerSqm: number
+  weeksPerSqm: number
+}
+
+type Condition = {
+  id: 'new' | 'secondary'
+  name: string
+  multiplier: number
 }
 
 type ValueItem = {
@@ -51,7 +57,8 @@ export type SiteCopy = {
   localeName: string
   metaTitle: string
   metaDescription: string
-  nav: { story: string; architecture: string; investment: string; process: string; contact: string }
+  brand: { image: string; top: string; bottom: string }
+  nav: { story: string; architecture: string; estimate: string; process: string; contact: string }
   common: { discuss: string; details: string; optional: string }
   hero: {
     eyebrow: string
@@ -71,10 +78,12 @@ export type SiteCopy = {
     title: string
     lead: string
     quote: string
+    formationImage: string
     cards: Array<{ number: string; title: string; body: string; image: string; tag: string }>
   }
   value: {
     eyebrow: string
+    marquee: string
     title: string
     lead: string
     items: ValueItem[]
@@ -93,21 +102,22 @@ export type SiteCopy = {
     cue: string
     items: GalleryItem[]
   }
-  investment: {
+  estimate: {
     eyebrow: string
     title: string
     intro: string
-    capital: string
-    term: string
-    strategy: string
-    months: string
-    invested: string
-    income: string
-    value: string
-    roi: string
-    estimate: string
+    area: string
+    areaUnit: string
+    condition: string
+    renovation: string
+    total: string
+    perSqm: string
+    timeline: string
+    weeksUnit: string
+    estimateLabel: string
     disclaimer: string
-    strategies: Strategy[]
+    conditions: Condition[]
+    renovationTypes: RenovationType[]
   }
   assurance: {
     eyebrow: string
@@ -157,222 +167,232 @@ export type SiteCopy = {
     successBody: string
     successAgain: string
     mapLabel: string
+    telegram: string
+    whatsapp: string
+    viber: string
+    mapEmbedUrl: string
   }
   footer: { line: string; rights: string; privacy: string }
 }
 
-export const content: Record<Locale, SiteCopy> = {
-  uk: {
+export const content: Record<Locale, SiteCopy> = {  uk: {
     localeName: 'UA',
-    metaTitle: 'Коттедж Інвест — архітектура капіталу',
-    metaDescription: 'Добір, створення та керування дохідною заміською нерухомістю.',
+    metaTitle: 'eLITstroy — ремонт квартир під ключ',
+    metaDescription: 'Косметичний, капітальний та ремонт квартир під ключ: проєкт, фіксована кошторис, контроль строків і гарантія.',
+    brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
     nav: {
       story: 'Підхід',
-      architecture: 'Продукт',
-      investment: 'Модель',
+      architecture: 'Ремонт',
+      estimate: 'Розрахунок',
       process: 'Процес',
       contact: 'Контакти'
     },
     common: { discuss: 'Обговорити проєкт', details: 'Детальніше', optional: 'Необов’язково' },
     hero: {
-      eyebrow: 'Нерухомість × інвестиції',
-      titleTop: 'Архітектура',
-      titleAccent: 'вашого капіталу',
-      lead: 'Перетворюємо заміські будинки на зрозумілий інвестиційний продукт — від ділянки до керованого активу.',
-      primary: 'Отримати презентацію',
-      secondary: 'Дослідити модель',
-      availability: 'Нові проєкти · 2026',
+      eyebrow: 'Ремонт квартир × під ключ',
+      titleTop: 'Ремонт',
+      titleAccent: 'під ключ, без сюрпризів',
+      lead: 'Беремо квартиру від стану «після будівельників» або «старий фонд» до готового простору — з дизайн-проєктом, фіксованою кошторисом і гарантією.',
+      primary: 'Розрахувати ремонт',
+      secondary: 'Дослідити етапи',
+      availability: 'Вільні слоти · 2026',
       scroll: 'Гортайте, щоб дослідити',
-      model: 'Concept 01 / Forest line',
+      model: 'Concept 01 / City line',
       image: '/images/hero-cabin.webp',
       stats: [
         { value: '01', label: 'єдина команда' },
-        { value: '360°', label: 'цикл реалізації' },
-        { value: 'UA / EN', label: 'для локальних та іноземних інвесторів' }
+        { value: '360°', label: 'цикл ремонту' },
+        { value: 'UA / EN', label: 'для власників та інвесторів' }
       ]
     },
     story: {
-      eyebrow: 'Інвестиція, яку можна відчути',
-      title: 'Створюємо не квадратні метри. Створюємо актив із власним сценарієм зростання.',
-      lead: 'Поєднуємо аналітику локації, виразну архітектуру та операційне управління. Кожне рішення працює на привабливість об’єкта сьогодні й його вартість завтра.',
-      quote: 'Капітал має не просто зберігатися. Він має набувати форми.',
+      eyebrow: 'Ремонт, який можна спланувати',
+      title: 'Створюємо не ремонт заради ремонту. Створюємо простір із власним сценарієм життя.',
+      lead: 'Поєднуємо обстеження об’єкта, виразний дизайн-проєкт і дисципліну реалізації. Кожне рішення працює на зручність простору сьогодні та його вартість завтра.',
+      quote: 'Ремонт має не просто завершитися. Він має працювати на вас.',
+      formationImage: '/images/story-interior.webp',
       cards: [
         {
           number: '01',
-          title: 'Вибір локації',
-          body: 'Оцінюємо попит, логістику, природний потенціал і майбутню ліквідність ділянки.',
+          title: 'Обстеження об’єкта',
+          body: 'Оцінюємо стан квартири, комунікації, перекриття та приховані ризики ще до першої цифри в кошторисі.',
           image: '/images/story-location.webp',
-          tag: 'LOCATION / DEMAND'
+          tag: 'ОГЛЯД / СТАН'
         },
         {
           number: '02',
-          title: 'Продуктовий дизайн',
-          body: 'Проєктуємо будинок як досвід, за який гість готовий повертатися і платити більше.',
+          title: 'Дизайн-проєкт',
+          body: 'Проєктуємо планування, світло та матеріали як досвід, у якому зручно жати щодня.',
           image: '/images/story-interior.webp',
-          tag: 'DESIGN / SPACES'
+          tag: 'ПРОЄКТ / ПРОСТІР'
         },
         {
           number: '03',
-          title: 'Керована модель',
-          body: 'Формуємо прозорий сценарій запуску, експлуатації та контролю ключових показників.',
+          title: 'Фіксована кошторис',
+          body: 'Формуємо прозорий бюджет, графік робіт і поетапне приймання без сюрпризів у фіналі.',
           image: '/images/story-management.webp',
-          tag: 'TURNKEY / YIELD'
+          tag: 'ПІД КЛЮЧ / БЮДЖЕТ'
         }
       ]
     },
     value: {
-      eyebrow: 'Повна система створення вартості',
-      title: 'Три дисципліни працюють як один інвестиційний механізм.',
-      lead: 'Ми не передаємо проєкт між розрізненими підрядниками. Продукт, реалізація та керування розвиваються одночасно й підтримують єдину економіку об’єкта.',
+      eyebrow: 'Повна система реалізації ремонту',
+      marquee: 'PLAN · DEMOLITION · ROUGH-IN · FINISHING · HANDOVER · ',
+      title: 'Три дисципліни працюють як один механізм.',
+      lead: 'Ми не передаємо квартиру між розрізненими бригадами. Проєкт, реалізація та контроль якості розвиваються одночасно й підтримують єдиний графік об’єкта.',
       items: [
-        { index: '01', title: 'Нерухомість як продукт', body: 'Концепція починається з портрета гостя, сценарію перебування та цільового тарифу — і лише потім стає архітектурою.', metric: '01', metricLabel: 'цілісний продукт' },
-        { index: '02', title: 'Реалізація без розривів', body: 'Комплектація, бюджет і будівельні рішення перевіряються на відповідність початковій інвестиційній моделі.', metric: '360°', metricLabel: 'контроль циклу' },
-        { index: '03', title: 'Дані після запуску', body: 'Завантаження, середній тариф, витрати й відгуки перетворюються на рішення для подальшого зростання активу.', metric: '24/7', metricLabel: 'видимість показників' }
+        { index: '01', title: 'Ремонт як система', body: 'Робота починається з планування, сценаріїв використання та бюджету — і лише потім стає інтер’єром.', metric: '01', metricLabel: 'цілісний проєкт' },
+        { index: '02', title: 'Реалізація без розривів', body: 'Закупівлі, графік і будівельні рішення перевіряються на відповідність початковій кошторисі.', metric: '360°', metricLabel: 'контроль циклу' },
+        { index: '03', title: 'Контроль після здачі', body: 'Гарантійні терміни, сервісні виїзди та стан комунікацій залишаються під нашим наглядом після здачі.', metric: '24', metricLabel: 'місяці гарантії' }
       ]
     },
     architecture: {
-      eyebrow: 'Один об’єкт. Чотири шари цінності.',
-      title: 'Будинок, спроєктований як система',
-      intro: 'Розкладаємо інвестиційний продукт на складові — від землі до сервісу. Гортайте, щоб побачити логіку моделі.',
+      eyebrow: 'Одна квартира. Чотири шари цінності.',
+      title: 'Ремонт, спроєктований як система',
+      intro: 'Розкладаємо ремонт на складові — від обстеження до здачі. Гортайте, щоб побачити логіку процесу.',
       drag: 'Сцена реагує на рух',
       chapters: [
         {
           index: '01',
           eyebrow: 'Основа',
-          title: 'Локація формує попит',
-          body: 'Природне оточення, близькість до міста та приватність створюють дефіцитний сценарій відпочинку.',
-          metric: '40–70',
-          metricLabel: 'хв до міста',
+          title: 'Стан квартири формує кошторис',
+          body: 'Комунікації, перекриття, вологість і стан стін визначають обсяг підготовчих робіт і реальний бюджет.',
+          metric: '48 год',
+          metricLabel: 'на діагностику об’єкта',
           image: '/images/arch-plot.webp',
-          tag: '01 · FOUNDATION'
+          tag: '01 · ОГЛЯД'
         },
         {
           index: '02',
-          eyebrow: 'Оболонка',
-          title: 'Архітектура формує бажання',
-          body: 'Великі площини скла, тактильні матеріали й продумані ракурси перетворюють проживання на емоцію.',
-          metric: '92 м²',
-          metricLabel: 'ефективної площі',
+          eyebrow: 'Черновий етап',
+          title: 'Інженерія формує надійність',
+          body: 'Демонтаж, електрика, сантехніка та вирівнювання створюють основу, яка служить десятиліттями.',
+          metric: '120+',
+          metricLabel: 'контрольних точок',
           image: '/images/arch-facade.webp',
-          tag: '02 · SHELL'
+          tag: '02 · ЧОРНОВІ РОБОТИ'
         },
         {
           index: '03',
-          eyebrow: 'Середовище',
-          title: 'Деталі формують тариф',
-          body: 'Тераса, приватна SPA-зона, світло й сценарії тиші підсилюють цінність кожної доби.',
-          metric: '4 сезони',
-          metricLabel: 'стабільного попиту',
+          eyebrow: 'Чистова оздоблення',
+          title: 'Деталі формують характер',
+          body: 'Матеріали, світло, сантехніка й меблі збираються у простір, який виглядає продуманим до дрібниць.',
+          metric: '4 етапи',
+          metricLabel: 'поетапного приймання',
           image: '/images/arch-spa.webp',
-          tag: '03 · SPA & TERRACE'
+          tag: '03 · ОЗДОБЛЕННЯ'
         },
         {
           index: '04',
-          eyebrow: 'Управління',
-          title: 'Сервіс формує результат',
-          body: 'Бронювання, догляд, звітність і комунікація з гостями збираються в єдиний керований процес.',
-          metric: '24 / 7',
-          metricLabel: 'контроль активу',
+          eyebrow: 'Здача',
+          title: 'Сервіс формує спокій',
+          body: 'Професійне прибирання, інструктаж, документація та гарантійна підтримка після здачі об’єкта.',
+          metric: '24 міс',
+          metricLabel: 'гарантії на роботи',
           image: '/images/arch-service.webp',
-          tag: '04 · MANAGEMENT'
+          tag: '04 · ЗДАЧА'
         }
       ]
     },
     gallery: {
       eyebrow: 'Простори, які запам’ятовують',
-      title: 'Не каталог будинків. Колекція інвестиційних сценаріїв.',
-      intro: 'Вертикальний скрол перетворюється на горизонтальну подорож — від першого контакту з локацією до деталей сервісу.',
+      title: 'Не каталог ремонтів. Колекція готових сценаріїв життя.',
+      intro: 'Вертикальний скрол перетворюється на горизонтальну подорож — від першого огляду квартири до деталей чистової оздоблення.',
       cue: 'Гортайте далі',
       items: [
-        { index: '01', title: 'Forest Frame', location: 'Лісова резиденція', image: '/images/hero-cabin.webp', tag: 'ARCHITECTURE' },
-        { index: '02', title: 'Quiet Interior', location: 'Простір тиші', image: '/images/story-interior.webp', tag: 'INTERIOR' },
-        { index: '03', title: 'Private Ritual', location: 'SPA та відновлення', image: '/images/arch-spa.webp', tag: 'WELLNESS' },
-        { index: '04', title: 'Remote Ground', location: 'Дефіцитна локація', image: '/images/story-location.webp', tag: 'LOCATION' },
-        { index: '05', title: 'Built to Last', location: 'Контроль реалізації', image: '/images/step-delivery.webp', tag: 'DELIVERY' },
-        { index: '06', title: 'Visible Asset', location: 'Керування після запуску', image: '/images/trust-system.webp', tag: 'OPERATIONS' }
+        { index: '01', title: 'Свіжий старт', location: 'Студія 38 м²', image: '/images/gallery-forest-frame.webp', tag: 'ПІД КЛЮЧ' },
+        { index: '02', title: 'Тихий інтер’єр', location: 'Спальня 62 м²', image: '/images/gallery-quiet-interior.webp', tag: 'ІНТЕР’ЄР' },
+        { index: '03', title: 'Приватний ритуал', location: 'Санвузол та відновлення', image: '/images/gallery-private-ritual.webp', tag: 'САНВУЗОЛ' },
+        { index: '04', title: 'Відкритий простір', location: 'Кухня-вітальня 74 м²', image: '/images/gallery-remote-ground.webp', tag: 'ПЛАНУВАННЯ' },
+        { index: '05', title: 'Створено надовго', location: 'Контроль інженерії', image: '/images/gallery-built-to-last.webp', tag: 'ЧОРНОВІ РОБОТИ' },
+        { index: '06', title: 'Готово до життя', location: 'Здача під ключ', image: '/images/gallery-visible-asset.webp', tag: 'ЗДАЧА' }
       ]
     },
-    investment: {
-      eyebrow: 'Демонстраційна модель',
-      title: 'Перевірте потенціал у цифрах',
-      intro: 'Налаштуйте базові параметри, щоб побачити орієнтовний сценарій. Точна модель формується індивідуально після аналізу об’єкта.',
-      capital: 'Обсяг інвестиції',
-      term: 'Горизонт',
-      strategy: 'Стратегія',
-      months: 'міс.',
-      invested: 'Стартовий капітал',
-      income: 'Орієнтовний прибуток',
-      value: 'Прогнозна вартість',
-      roi: 'ROI за період',
-      estimate: 'Орієнтир',
-      disclaimer: 'Розрахунок є демонстраційним, не є фінансовою гарантією чи публічною офертою. Фактичні показники залежать від локації, комплектації, завантаження та ринкових умов.',
-      strategies: [
-        { id: 'income', name: 'Стабільний дохід', description: 'Фокус на регулярному орендному потоці', yield: 9.8, growth: 3.2 },
-        { id: 'balanced', name: 'Збалансована', description: 'Дохідність і зростання вартості активу', yield: 12.4, growth: 4.2 },
-        { id: 'growth', name: 'Зростання', description: 'Фокус на потенціалі локації та продукту', yield: 8.6, growth: 7.4 }
+    estimate: {
+      eyebrow: 'Демонстраційний розрахунок',
+      title: 'Оцініть вартість ремонту в цифрах',
+      intro: 'Налаштуйте базові параметри, щоб побачити орієнтовну смету. Точний розрахунок формується індивідуально після обстеження об’єкта.',
+      area: 'Площа квартири',
+      areaUnit: 'м²',
+      condition: 'Тип об’єкта',
+      renovation: 'Тип ремонту',
+      total: 'Орієнтовна вартість',
+      perSqm: 'Вартість за м²',
+      timeline: 'Термін робіт',
+      weeksUnit: 'тижнів',
+      estimateLabel: 'Орієнтир',
+      disclaimer: 'Розрахунок є демонстраційним, не є публічною офертою. Фактична вартість залежає від стану об’єкта, комплектації матеріалів, обсягу робіт та ринкових умов.',
+      conditions: [
+        { id: 'new', name: 'Новобудова', multiplier: 1 },
+        { id: 'secondary', name: 'Вторинний ринок', multiplier: 1.18 }
+      ],
+      renovationTypes: [
+        { id: 'cosmetic', name: 'Косметичний', description: 'Оновлення оздоблення без перепланування', pricePerSqm: 190, weeksPerSqm: 0.05 },
+        { id: 'capital', name: 'Капітальний', description: 'Інженерія, стіни, підлога, сантехніка', pricePerSqm: 340, weeksPerSqm: 0.1 },
+        { id: 'turnkey', name: 'Під ключ', description: 'Проєкт, матеріали, роботи та здача повністю', pricePerSqm: 520, weeksPerSqm: 0.14 }
       ]
     },
     assurance: {
       eyebrow: 'Контроль замість припущень',
-      title: 'Інвестор бачить актив з чотирьох сторін.',
-      lead: 'Єдина панель рішень поєднує фінанси, строки, якість продукту та операційні показники.',
+      title: 'Ви бачите ремонт з чотирьох сторін.',
+      lead: 'Єдина панель рішень поєднує кошторис, графік, якість матеріалів та результат здачі.',
       metrics: [
-        { value: '01', label: 'Фінансова рамка', detail: 'Фіксуємо бюджет, резерви, цільову модель і правила прийняття рішень.' },
-        { value: '02', label: 'Маршрут реалізації', detail: 'Розкладаємо проєкт на контрольні точки, залежності та відповідальних.' },
-        { value: '03', label: 'Контроль продукту', detail: 'Перевіряємо матеріали, вузли й комплектацію на відповідність концепції.' },
-        { value: '04', label: 'Запуск і результат', detail: 'Зводимо тариф, завантаження, витрати та якість сервісу в одну картину.' }
+        { value: '01', label: 'Кошторис і бюджет', detail: 'Фіксуємо обсяг робіт, резерви, ціни матеріалів і правила прийняття рішень.' },
+        { value: '02', label: 'Графік робіт', detail: 'Розкладаємо ремонт на етапи, залежності та відповідальних за кожен блок.' },
+        { value: '03', label: 'Якість матеріалів', detail: 'Перевіряємо поставки, вузли й комплектацію на відповідність проєкту.' },
+        { value: '04', label: 'Здача і гарантія', detail: 'Зводимо прибирання, документацію та гарантійні зобов’язання в одну картину.' }
       ]
     },
     process: {
-      eyebrow: 'Від наміру до працюючого активу',
+      eyebrow: 'Від огляду до готової квартири',
       title: 'Складний процес. Проста комунікація.',
-      intro: 'Ви бачите рішення, статус і наступний крок. Ми координуємо всі дисципліни, щоб об’єкт рухався як єдиний проєкт.',
+      intro: 'Ви бачите рішення, статус і наступний крок. Ми координуємо всі етапи, щоб ремонт рухався як єдиний проєкт.',
       steps: [
         {
           index: '01',
-          title: 'Стратегія',
-          body: 'Фіксуємо цілі, бюджет, горизонт і критерії майбутнього об’єкта.',
+          title: 'Діагностика',
+          body: 'Обстежуємо об’єкт, фіксуємо стан, заміри та критерії майбутнього ремонту.',
           image: '/images/step-strategy.webp'
         },
         {
           index: '02',
-          title: 'Концепція',
-          body: 'Збираємо локацію, архітектуру та фінансовий сценарій в одну модель.',
+          title: 'Проєкт',
+          body: 'Збираємо планування, матеріали та фінансовий сценарій в одну модель.',
           image: '/images/step-concept.webp'
         },
         {
           index: '03',
-          title: 'Реалізація',
-          body: 'Керуємо комплектацією, термінами, якістю та підготовкою до запуску.',
+          title: 'Ремонт',
+          body: 'Керуємо закупівлями, термінами, якістю та поетапним прийманням робіт.',
           image: '/images/step-delivery.webp'
         },
         {
           index: '04',
-          title: 'Запуск',
-          body: 'Налаштовуємо операційний контур, звітність і контроль результату.',
+          title: 'Здача',
+          body: 'Завершуємо оздоблення, прибирання та передаємо квартиру з гарантією.',
           image: '/images/step-launch.webp'
         }
       ],
-      trustTitle: 'Ваш актив залишається зрозумілим',
+      trustTitle: 'Ваш ремонт залишається зрозумілим',
       trustBody: 'Структурована звітність і єдина точка комунікації допомагають приймати рішення без інформаційного шуму.',
-      trustItems: ['Етапність і контрольні точки', 'Прозорий бюджет', 'Єдина команда реалізації'],
+      trustItems: ['Етапність і контрольні точки', 'Прозора кошторис', 'Єдина команда реалізації'],
       trustImage: '/images/trust-system.webp',
-      trustBadge: 'AURA-MDLR · CONTROL MATRIX'
+      trustBadge: 'ELIT-STROY · МАТРИЦЯ КОНТРОЛЮ'
     },
     faq: {
       eyebrow: 'Відповіді без дрібного шрифту',
       title: 'Що важливо знати до старту',
       lead: 'Ключові питання, які допомагають зрозуміти формат співпраці ще до першої зустрічі.',
       items: [
-        { question: 'Чи можна почати без власної ділянки?', answer: 'Так. Пошук і попередня оцінка локації можуть бути частиною стратегії. Ми зіставляємо потенціал ділянки з бюджетом, логістикою та майбутнім сценарієм попиту.' },
-        { question: 'Коли формується точна фінансова модель?', answer: 'Після визначення локації, площі, комплектації та операційного формату. Демонстраційний калькулятор показує логіку, але не замінює індивідуальний розрахунок.' },
-        { question: 'Хто керує об’єктом після запуску?', answer: 'Модель керування узгоджується окремо: власна команда інвестора, зовнішній оператор або партнерський контур. Головне — зафіксовані стандарти й прозорі показники.' },
-        { question: 'Як інвестор контролює реалізацію?', answer: 'Через контрольні точки, статус бюджету, графік рішень і єдину відповідальну команду. Формат звітності погоджується на старті проєкту.' }
+        { question: 'Чи можна почати без дизайн-проєкту?', answer: 'Так. Для косметичного ремонту достатньо узгодженого списку робіт. Для капітального ремонту та формату «під ключ» ми рекомендуємо проєкт: він захищає бюджет від імпровізацій у процесі.' },
+        { question: 'Коли фіксується точна кошторис?', answer: 'Після обстеження об’єкта, замірів і затвердження комплектації матеріалів. Демонстраційний калькулятор показує логіку ціноутворення, але не замінює індивідуальний розрахунок.' },
+        { question: 'Що входить у ремонт під ключ?', answer: 'Дизайн-проєкт, демонтаж, інженерні мережі, чорнові та чистові роботи, закупівля матеріалів, меблювання, прибирання та здача. Ви отримуєте готову квартиру без власного контролю будівельного процесу.' },
+        { question: 'Як контролюються строки та якість?', answer: 'Через етапи з контрольними точками, фотоотчети, поетапне приймання та єдину відповідальну команду. Формат звітності погоджується на старті проєкту.' }
       ]
     },
     contact: {
-      eyebrow: 'Почнімо з вашої мети',
-      title: 'Який актив ви хочете створити?',
+      eyebrow: 'Почнімо з вашої квартири',
+      title: 'Який ремонт ви хочете отримати?',
       lead: 'Залиште контакти. На першій розмові визначимо формат, бюджет і наступний практичний крок.',
       location: 'Харків, Україна',
       locationLabel: 'Базова локація',
@@ -386,223 +406,234 @@ export const content: Record<Locale, SiteCopy> = {
         contact: 'Телефон або email',
         contactPlaceholder: '+380 або name@email.com',
         interest: 'Що вас цікавить?',
-        interestOptions: ['Інвестиція в готовий проєкт', 'Створення об’єкта з нуля', 'Партнерство', 'Поки вивчаю можливості'],
+        interestOptions: ['Ремонт під ключ', 'Капітальний ремонт', 'Косметичний ремонт', 'Поки вивчаю можливості'],
         consent: 'Погоджуюся на обробку даних для зворотного зв’язку',
         submit: 'Запланувати розмову'
       },
       errors: { required: 'Заповніть це поле', contact: 'Вкажіть коректний телефон або email', consent: 'Потрібна ваша згода' },
       successTitle: 'Запит сформовано',
-      successBody: 'Це демонстраційна форма: дані нікуди не надсилалися. Після підключення endpoint тут працюватиме реальна заявка.',
+      successBody: 'Дані заявки збережено. Ми зв’яжемося з вами протягом робочого дня.',
       successAgain: 'Надіслати ще один запит',
-      mapLabel: 'Точка координації · Харків'
+      mapLabel: 'Точка координації · Харків',
+      telegram: 'https://t.me/elitstroy',
+      whatsapp: 'https://wa.me/380000000000',
+      viber: 'viber://chat?number=%2B380000000000',
+      mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Нерухомість, що працює на майбутнє.', rights: 'Коттедж Інвест. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
+    footer: { line: 'Ремонт, який працює на ваш простір.', rights: 'eLITstroy. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
   },
   en: {
     localeName: 'EN',
-    metaTitle: 'Cottage Invest — architecture of capital',
-    metaDescription: 'Selection, development and management of income-generating countryside real estate.',
-    nav: { story: 'Approach', architecture: 'Product', investment: 'Model', process: 'Process', contact: 'Contact' },
+    metaTitle: 'eLITstroy — turnkey apartment renovation',
+    metaDescription: 'Cosmetic, capital and turnkey apartment renovation: design, fixed estimate, schedule control and warranty.',
+    brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
+    nav: { story: 'Approach', architecture: 'Renovation', estimate: 'Estimate', process: 'Process', contact: 'Contact' },
     common: { discuss: 'Discuss a project', details: 'Explore', optional: 'Optional' },
     hero: {
-      eyebrow: 'Real estate × investment',
-      titleTop: 'Architecture',
-      titleAccent: 'for your capital',
-      lead: 'We turn countryside homes into a clear investment product — from the right plot to a managed asset.',
-      primary: 'Get the presentation',
-      secondary: 'Explore the model',
-      availability: 'New projects · 2026',
+      eyebrow: 'Apartment renovation × turnkey',
+      titleTop: 'Renovation',
+      titleAccent: 'turnkey, no surprises',
+      lead: 'We take an apartment from developer finish or dated stock to a ready living space — with a design project, fixed estimate and warranty.',
+      primary: 'Estimate your renovation',
+      secondary: 'Explore the stages',
+      availability: 'Open slots · 2026',
       scroll: 'Scroll to explore',
-      model: 'Concept 01 / Forest line',
+      model: 'Concept 01 / City line',
       image: '/images/hero-cabin.webp',
       stats: [
         { value: '01', label: 'integrated team' },
-        { value: '360°', label: 'delivery cycle' },
-        { value: 'UA / EN', label: 'for local and international investors' }
+        { value: '360°', label: 'renovation cycle' },
+        { value: 'UA / EN', label: 'for owners and investors' }
       ]
     },
     story: {
-      eyebrow: 'An investment you can feel',
-      title: 'We do not create square metres. We create an asset with its own growth scenario.',
-      lead: 'Location intelligence, expressive architecture and operational management work together. Every decision increases the appeal of the property today and its value tomorrow.',
-      quote: 'Capital should not simply be stored. It should take shape.',
+      eyebrow: 'A renovation you can plan',
+      title: 'We do not renovate for the sake of renovating. We create a space with its own living scenario.',
+      lead: 'Property survey, expressive design and delivery discipline work together. Every decision improves daily comfort today and the value of the apartment tomorrow.',
+      quote: 'A renovation should not simply end. It should work for you.',
+      formationImage: '/images/story-interior.webp',
       cards: [
         {
           number: '01',
-          title: 'Location selection',
-          body: 'We assess demand, access, natural potential and future liquidity of the property plot.',
+          title: 'Property survey',
+          body: 'We assess the condition, utilities, slabs and hidden risks before the first number enters the estimate.',
           image: '/images/story-location.webp',
-          tag: 'LOCATION / DEMAND'
+          tag: 'SURVEY / CONDITION'
         },
         {
           number: '02',
-          title: 'Product design',
-          body: 'We design an experience guests want to return to and are willing to value higher.',
+          title: 'Design project',
+          body: 'We design layout, lighting and materials as an experience people enjoy living in every day.',
           image: '/images/story-interior.webp',
           tag: 'DESIGN / SPACES'
         },
         {
           number: '03',
-          title: 'Managed model',
-          body: 'We create a transparent path to launch, operate and monitor the essential metrics.',
+          title: 'Fixed estimate',
+          body: 'We create a transparent budget, work schedule and stage-by-stage acceptance without surprises.',
           image: '/images/story-management.webp',
-          tag: 'TURNKEY / YIELD'
+          tag: 'TURNKEY / BUDGET'
         }
       ]
     },
     value: {
-      eyebrow: 'A complete value creation system',
-      title: 'Three disciplines work as one investment mechanism.',
-      lead: 'We do not pass the project between disconnected contractors. Product, delivery and management evolve together around one property economy.',
+      eyebrow: 'A complete renovation system',
+      marquee: 'PLAN · DEMOLITION · ROUGH-IN · FINISHING · HANDOVER · ',
+      title: 'Three disciplines work as one delivery mechanism.',
+      lead: 'We do not pass the apartment between disconnected crews. Design, delivery and quality control evolve together around one schedule.',
       items: [
-        { index: '01', title: 'Real estate as a product', body: 'The concept begins with the guest, the stay scenario and the target rate — only then does it become architecture.', metric: '01', metricLabel: 'integrated product' },
-        { index: '02', title: 'Delivery without gaps', body: 'Specification, budget and construction decisions are checked against the original investment model.', metric: '360°', metricLabel: 'cycle control' },
-        { index: '03', title: 'Data after launch', body: 'Occupancy, average rate, costs and reviews become decisions that continue to grow the asset.', metric: '24/7', metricLabel: 'metric visibility' }
+        { index: '01', title: 'Renovation as a system', body: 'The concept begins with layout, usage scenarios and budget — only then does it become an interior.', metric: '01', metricLabel: 'integrated project' },
+        { index: '02', title: 'Delivery without gaps', body: 'Procurement, schedule and construction decisions are checked against the original estimate.', metric: '360°', metricLabel: 'cycle control' },
+        { index: '03', title: 'Care after handover', body: 'Warranty, service visits and documentation stay under our supervision after handover.', metric: '24', metricLabel: 'months of warranty' }
       ]
     },
     architecture: {
-      eyebrow: 'One property. Four layers of value.',
-      title: 'A house designed as a system',
-      intro: 'We break down the investment product from land to service. Scroll to discover how the model works.',
+      eyebrow: 'One apartment. Four layers of value.',
+      title: 'A renovation designed as a system',
+      intro: 'We break the renovation down into layers — from survey to handover. Scroll to discover how the process works.',
       drag: 'Scene responds to movement',
       chapters: [
         {
           index: '01',
           eyebrow: 'Foundation',
-          title: 'Location creates demand',
-          body: 'Nature, access to the city and privacy shape a scarce, desirable escape.',
-          metric: '40–70',
-          metricLabel: 'min from the city',
+          title: 'Condition shapes the estimate',
+          body: 'Utilities, slabs, moisture and wall condition define the preparation scope and the realistic budget.',
+          metric: '48 hrs',
+          metricLabel: 'to survey the property',
           image: '/images/arch-plot.webp',
-          tag: '01 · FOUNDATION'
+          tag: '01 · SURVEY'
         },
         {
           index: '02',
-          eyebrow: 'Shell',
-          title: 'Architecture creates desire',
-          body: 'Expansive glazing, tactile materials and considered views turn a stay into an emotion.',
-          metric: '92 m²',
-          metricLabel: 'of efficient space',
+          eyebrow: 'Rough-in',
+          title: 'Engineering creates reliability',
+          body: 'Demolition, electrics, plumbing and levelling build the base that lasts for decades.',
+          metric: '120+',
+          metricLabel: 'checkpoints',
           image: '/images/arch-facade.webp',
-          tag: '02 · SHELL'
+          tag: '02 · ROUGH-IN'
         },
         {
           index: '03',
-          eyebrow: 'Experience',
-          title: 'Details create rate',
-          body: 'A terrace, private spa, lighting and quiet rituals increase the value of every night.',
-          metric: '4 seasons',
-          metricLabel: 'of steady demand',
+          eyebrow: 'Finishing',
+          title: 'Details create character',
+          body: 'Materials, lighting, sanitary ware and furniture come together into a space considered down to the details.',
+          metric: '4 stages',
+          metricLabel: 'of staged acceptance',
           image: '/images/arch-spa.webp',
-          tag: '03 · SPA & TERRACE'
+          tag: '03 · FINISHING'
         },
         {
           index: '04',
-          eyebrow: 'Management',
-          title: 'Service creates results',
-          body: 'Bookings, maintenance, reporting and guest communication become one managed process.',
-          metric: '24 / 7',
-          metricLabel: 'asset visibility',
+          eyebrow: 'Handover',
+          title: 'Service creates peace of mind',
+          body: 'Professional cleaning, walkthrough, documentation and warranty support after the keys are handed over.',
+          metric: '24 mo',
+          metricLabel: 'workmanship warranty',
           image: '/images/arch-service.webp',
-          tag: '04 · MANAGEMENT'
+          tag: '04 · HANDOVER'
         }
       ]
     },
     gallery: {
       eyebrow: 'Spaces worth remembering',
-      title: 'Not a catalogue of houses. A collection of investment scenarios.',
-      intro: 'Vertical scrolling becomes a horizontal journey — from the first encounter with a location to the details of service.',
+      title: 'Not a catalogue of renovations. A collection of ready living scenarios.',
+      intro: 'Vertical scrolling becomes a horizontal journey — from the first apartment walkthrough to the details of finishing.',
       cue: 'Keep scrolling',
       items: [
-        { index: '01', title: 'Forest Frame', location: 'Woodland residence', image: '/images/hero-cabin.webp', tag: 'ARCHITECTURE' },
-        { index: '02', title: 'Quiet Interior', location: 'A space for stillness', image: '/images/story-interior.webp', tag: 'INTERIOR' },
-        { index: '03', title: 'Private Ritual', location: 'Spa and recovery', image: '/images/arch-spa.webp', tag: 'WELLNESS' },
-        { index: '04', title: 'Remote Ground', location: 'A scarce location', image: '/images/story-location.webp', tag: 'LOCATION' },
-        { index: '05', title: 'Built to Last', location: 'Controlled delivery', image: '/images/step-delivery.webp', tag: 'DELIVERY' },
-        { index: '06', title: 'Visible Asset', location: 'Post-launch management', image: '/images/trust-system.webp', tag: 'OPERATIONS' }
+        { index: '01', title: 'Fresh Start', location: 'Studio 38 m²', image: '/images/gallery-forest-frame.webp', tag: 'TURNKEY' },
+        { index: '02', title: 'Quiet Interior', location: 'Bedroom 62 m²', image: '/images/gallery-quiet-interior.webp', tag: 'INTERIOR' },
+        { index: '03', title: 'Private Ritual', location: 'Bathroom and recovery', image: '/images/gallery-private-ritual.webp', tag: 'BATHROOM' },
+        { index: '04', title: 'Open Ground', location: 'Kitchen-living 74 m²', image: '/images/gallery-remote-ground.webp', tag: 'LAYOUT' },
+        { index: '05', title: 'Built to Last', location: 'Engineering control', image: '/images/gallery-built-to-last.webp', tag: 'ROUGH-IN' },
+        { index: '06', title: 'Ready to Live', location: 'Turnkey handover', image: '/images/gallery-visible-asset.webp', tag: 'HANDOVER' }
       ]
     },
-    investment: {
+    estimate: {
       eyebrow: 'Demonstration model',
-      title: 'Explore the potential in numbers',
-      intro: 'Adjust the essentials to view an indicative scenario. A precise model is built individually after analysing the property.',
-      capital: 'Investment amount',
-      term: 'Horizon',
-      strategy: 'Strategy',
-      months: 'mo.',
-      invested: 'Starting capital',
-      income: 'Indicative profit',
-      value: 'Projected value',
-      roi: 'Period ROI',
-      estimate: 'Estimate',
-      disclaimer: 'This calculation is for demonstration only and is not a financial guarantee or public offer. Actual results depend on location, specification, occupancy and market conditions.',
-      strategies: [
-        { id: 'income', name: 'Stable income', description: 'Focus on recurring rental cash flow', yield: 9.8, growth: 3.2 },
-        { id: 'balanced', name: 'Balanced', description: 'Income and long-term asset appreciation', yield: 12.4, growth: 4.2 },
-        { id: 'growth', name: 'Growth', description: 'Focus on the upside of location and product', yield: 8.6, growth: 7.4 }
+      title: 'Explore the renovation cost in numbers',
+      intro: 'Adjust the essentials to view an indicative estimate. A precise quotation is built individually after surveying the property.',
+      area: 'Apartment area',
+      areaUnit: 'm²',
+      condition: 'Property type',
+      renovation: 'Renovation type',
+      total: 'Indicative cost',
+      perSqm: 'Cost per m²',
+      timeline: 'Timeline',
+      weeksUnit: 'weeks',
+      estimateLabel: 'Estimate',
+      disclaimer: 'This calculation is for demonstration only and is not a public offer. Actual cost depends on property condition, material specification, scope of works and market conditions.',
+      conditions: [
+        { id: 'new', name: 'New build', multiplier: 1 },
+        { id: 'secondary', name: 'Secondary market', multiplier: 1.18 }
+      ],
+      renovationTypes: [
+        { id: 'cosmetic', name: 'Cosmetic', description: 'Finishing refresh without layout changes', pricePerSqm: 190, weeksPerSqm: 0.05 },
+        { id: 'capital', name: 'Capital', description: 'Engineering, walls, floors, plumbing', pricePerSqm: 340, weeksPerSqm: 0.1 },
+        { id: 'turnkey', name: 'Turnkey', description: 'Design, materials, works and full handover', pricePerSqm: 520, weeksPerSqm: 0.14 }
       ]
     },
     assurance: {
       eyebrow: 'Control instead of assumptions',
-      title: 'The investor sees the asset from four sides.',
-      lead: 'One decision layer brings together finance, schedule, product quality and operating performance.',
+      title: 'You see the renovation from four sides.',
+      lead: 'One decision layer brings together the estimate, schedule, material quality and handover result.',
       metrics: [
-        { value: '01', label: 'Financial frame', detail: 'We define the budget, reserves, target model and decision rules.' },
-        { value: '02', label: 'Delivery route', detail: 'We map the project into milestones, dependencies and accountable owners.' },
-        { value: '03', label: 'Product control', detail: 'Materials, details and specification are checked against the concept.' },
-        { value: '04', label: 'Launch and outcome', detail: 'Rate, occupancy, costs and service quality come together in one view.' }
+        { value: '01', label: 'Estimate and budget', detail: 'We define the scope, reserves, material prices and decision rules.' },
+        { value: '02', label: 'Work schedule', detail: 'We map the renovation into stages, dependencies and accountable owners.' },
+        { value: '03', label: 'Material quality', detail: 'Deliveries, details and specification are checked against the design project.' },
+        { value: '04', label: 'Handover and warranty', detail: 'Cleaning, documentation and warranty obligations come together in one view.' }
       ]
     },
     process: {
-      eyebrow: 'From intent to performing asset',
+      eyebrow: 'From walkthrough to ready apartment',
       title: 'A complex process. Simple communication.',
-      intro: 'You see the decision, status and next step. We coordinate every discipline so the property moves forward as one project.',
+      intro: 'You see the decision, status and next step. We coordinate every stage so the renovation moves forward as one project.',
       steps: [
         {
           index: '01',
-          title: 'Strategy',
-          body: 'We define goals, budget, horizon and criteria for the future property.',
+          title: 'Survey',
+          body: 'We inspect the property, record condition, measurements and criteria for the future renovation.',
           image: '/images/step-strategy.webp'
         },
         {
           index: '02',
-          title: 'Concept',
-          body: 'We combine location, architecture and the financial scenario into one model.',
+          title: 'Design',
+          body: 'We combine layout, materials and the financial scenario into one model.',
           image: '/images/step-concept.webp'
         },
         {
           index: '03',
-          title: 'Delivery',
-          body: 'We manage specification, timing, quality and launch readiness.',
+          title: 'Renovation',
+          body: 'We manage procurement, timing, quality and staged acceptance of works.',
           image: '/images/step-delivery.webp'
         },
         {
           index: '04',
-          title: 'Launch',
-          body: 'We establish operations, reporting and clear performance control.',
+          title: 'Handover',
+          body: 'We complete finishing, cleaning and hand the apartment over with a warranty.',
           image: '/images/step-launch.webp'
         }
       ],
-      trustTitle: 'Your asset stays understandable',
+      trustTitle: 'Your renovation stays understandable',
       trustBody: 'Structured reporting and one point of communication help you make decisions without the noise.',
-      trustItems: ['Clear milestones', 'Transparent budget', 'One delivery team'],
+      trustItems: ['Clear milestones', 'Transparent estimate', 'One delivery team'],
       trustImage: '/images/trust-system.webp',
-      trustBadge: 'AURA-MDLR · CONTROL MATRIX'
+      trustBadge: 'ELIT-STROY · CONTROL MATRIX'
     },
     faq: {
       eyebrow: 'Answers without the fine print',
       title: 'What matters before you start',
       lead: 'The essential questions that clarify the engagement before the first meeting.',
       items: [
-        { question: 'Can I begin without owning a plot?', answer: 'Yes. Location search and preliminary evaluation can be part of the strategy. We match the potential of a plot to budget, access and its future demand scenario.' },
-        { question: 'When is the precise financial model created?', answer: 'After location, area, specification and the operating format are defined. The demonstration calculator explains the logic but does not replace an individual model.' },
-        { question: 'Who manages the property after launch?', answer: 'The operating model is agreed separately: the investor’s team, an external operator or a partner setup. What matters is a documented standard and transparent metrics.' },
-        { question: 'How does the investor control delivery?', answer: 'Through milestones, budget status, a decision schedule and one accountable team. The reporting format is agreed at project start.' }
+        { question: 'Can I start without a design project?', answer: 'Yes. Cosmetic renovation only needs an agreed scope of works. For capital and turnkey renovation we recommend a design project: it protects the budget from improvisation during the process.' },
+        { question: 'When is the precise estimate fixed?', answer: 'After the property survey, measurements and material specification are approved. The demonstration calculator explains the pricing logic but does not replace an individual quotation.' },
+        { question: 'What does turnkey renovation include?', answer: 'Design project, demolition, engineering, rough and finishing works, material procurement, furnishing, cleaning and handover. You receive a ready apartment without managing the construction process yourself.' },
+        { question: 'How are schedule and quality controlled?', answer: 'Through milestones with checkpoints, photo reports, staged acceptance and one accountable team. The reporting format is agreed at project start.' }
       ]
     },
     contact: {
-      eyebrow: 'Let us start with your goal',
-      title: 'What kind of asset do you want to create?',
+      eyebrow: 'Let us start with your apartment',
+      title: 'What kind of renovation do you want?',
       lead: 'Leave your details. In our first conversation, we will define the format, budget and next practical step.',
       location: 'Kharkiv, Ukraine',
       locationLabel: 'Base location',
@@ -616,16 +647,48 @@ export const content: Record<Locale, SiteCopy> = {
         contact: 'Phone or email',
         contactPlaceholder: '+380 or name@email.com',
         interest: 'What are you interested in?',
-        interestOptions: ['Investing in a ready project', 'Creating a property from scratch', 'Partnership', 'Exploring the opportunity'],
+        interestOptions: ['Turnkey renovation', 'Capital renovation', 'Cosmetic renovation', 'Exploring the opportunity'],
         consent: 'I agree to the processing of my data for a reply',
         submit: 'Schedule a conversation'
       },
       errors: { required: 'Please complete this field', contact: 'Enter a valid phone or email', consent: 'Your consent is required' },
       successTitle: 'Your request is ready',
-      successBody: 'This is a demonstration form: no data was sent. Once an endpoint is connected, a real enquiry will be submitted here.',
+      successBody: 'Your request has been received. We will get back to you within one business day.',
       successAgain: 'Create another request',
-      mapLabel: 'Coordination point · Kharkiv'
+      mapLabel: 'Coordination point · Kharkiv',
+      telegram: 'https://t.me/elitstroy',
+      whatsapp: 'https://wa.me/380000000000',
+      viber: 'viber://chat?number=%2B380000000000',
+      mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Real estate designed for the future.', rights: 'Cottage Invest. Concept 2026.', privacy: 'Your data is not shared with third parties' }
+    footer: { line: 'Renovation designed for your space.', rights: 'eLITstroy. Concept 2026.', privacy: 'Your data is not shared with third parties' }
+  }
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const mergeDeep = <T>(base: T, override: unknown): T => {
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return (override === undefined ? base : override) as T
+  }
+  const merged: Record<string, unknown> = { ...base }
+  for (const [key, value] of Object.entries(override)) {
+    merged[key] = key in base ? mergeDeep((base as Record<string, unknown>)[key], value) : value
+  }
+  return merged as T
+}
+
+export const loadContent = async (): Promise<Record<Locale, SiteCopy>> => {
+  try {
+    const response = await fetch(`${import.meta.env.BASE_URL}content.json`, { cache: 'no-cache' })
+    if (!response.ok) return content
+    const data = (await response.json()) as Partial<Record<Locale, unknown>>
+    return {
+      uk: mergeDeep(content.uk, data.uk),
+      en: mergeDeep(content.en, data.en)
+    }
+  } catch {
+    return content
   }
 }

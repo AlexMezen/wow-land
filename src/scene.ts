@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-export type CottageSceneController = {
+export type InteriorSceneController = {
   setHeroProgress: (value: number) => void
   setArchitectureProgress: (value: number) => void
   setMode: (mode: 'hero' | 'architecture' | 'hidden') => void
@@ -22,41 +22,10 @@ const addEdges = (mesh: THREE.Mesh, color = 0x59675d, opacity = 0.34): THREE.Lin
   return edges
 }
 
-const createTree = (scale: number): THREE.Group => {
-  const tree = new THREE.Group()
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.08, 0.12, 1.45, 8),
-    new THREE.MeshStandardMaterial({ color: 0x58473a, roughness: 1 })
-  )
-  trunk.position.y = 0.72
-  const crownMaterial = new THREE.MeshStandardMaterial({ color: 0x273c30, roughness: 0.94 })
-  const lower = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.65, 10), crownMaterial)
-  const upper = new THREE.Mesh(new THREE.ConeGeometry(0.54, 1.4, 10), crownMaterial)
-  lower.position.y = 1.55
-  upper.position.y = 2.38
-  tree.add(trunk, lower, upper)
-  tree.scale.setScalar(scale)
-  return tree
-}
-
-const createTopographicLine = (radius: number, y: number, offset: number): THREE.LineLoop => {
-  const points = Array.from({ length: 96 }, (_, index) => {
-    const angle = (index / 96) * Math.PI * 2
-    const variation = Math.sin(angle * 3 + offset) * 0.32 + Math.sin(angle * 7 - offset) * 0.11
-    const distance = radius + variation
-    return new THREE.Vector3(Math.cos(angle) * distance, y, Math.sin(angle) * distance * 0.72)
-  })
-  const geometry = new THREE.BufferGeometry().setFromPoints(points)
-  return new THREE.LineLoop(
-    geometry,
-    new THREE.LineBasicMaterial({ color: 0xa8bd9a, transparent: true, opacity: 0.15 })
-  )
-}
-
-export const createCottageScene = (
+export const createInteriorScene = (
   canvas: HTMLCanvasElement,
   reducedMotion: boolean
-): CottageSceneController => {
+): InteriorSceneController => {
   const iOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, reducedMotion || iOSDevice ? 1 : 1.35))
@@ -77,11 +46,13 @@ export const createCottageScene = (
   world.position.y = -1.25
   scene.add(world)
 
-  const stoneMaterial = new THREE.MeshStandardMaterial({ color: 0xbeb9ab, roughness: 0.84, metalness: 0.02 })
-  const darkStoneMaterial = new THREE.MeshStandardMaterial({ color: 0x2e3732, roughness: 0.9 })
+  const plasterMaterial = new THREE.MeshStandardMaterial({ color: 0xbeb9ab, roughness: 0.84, metalness: 0.02 })
+  const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2e3732, roughness: 0.9 })
   const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x332a24, roughness: 0.76 })
   const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x161d19, roughness: 0.42, metalness: 0.68 })
   const warmMaterial = new THREE.MeshStandardMaterial({ color: 0xffd79a, emissive: 0xffa85f, emissiveIntensity: 1.4, roughness: 0.7 })
+  const fabricMaterial = new THREE.MeshStandardMaterial({ color: 0xaaa79d, roughness: 0.96 })
+  const accentMaterial = new THREE.MeshStandardMaterial({ color: 0x43584a, roughness: 0.62 })
   const glassMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x9eb6ab,
     roughness: 0.12,
@@ -91,118 +62,68 @@ export const createCottageScene = (
     transparent: true,
     opacity: 0.64
   })
-  const waterMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x55776a,
-    roughness: 0.08,
-    metalness: 0.12,
-    transmission: 0.28,
-    transparent: true,
-    opacity: 0.64
-  })
 
-  const terrain = new THREE.Group()
-  const island = new THREE.Mesh(new THREE.CylinderGeometry(8.4, 7.2, 0.62, 64), darkStoneMaterial)
-  island.scale.z = 0.72
-  island.receiveShadow = true
-  terrain.add(island)
+  const plinth = new THREE.Group()
+  const base = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.42, 5.6), darkMaterial)
+  base.position.y = -0.21
+  base.receiveShadow = true
+  plinth.add(base)
 
-  const grass = new THREE.Mesh(
-    new THREE.CylinderGeometry(8.25, 8.25, 0.12, 64),
-    new THREE.MeshStandardMaterial({ color: 0x435744, roughness: 1 })
-  )
-  grass.position.y = 0.36
-  grass.scale.z = 0.7
-  grass.receiveShadow = true
-  terrain.add(grass)
+  const plinthTop = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.1, 5.3), new THREE.MeshStandardMaterial({ color: 0x39443c, roughness: 1 }))
+  plinthTop.position.y = 0.05
+  plinthTop.receiveShadow = true
+  plinth.add(plinthTop)
 
-  for (let index = 0; index < 6; index += 1) {
-    terrain.add(createTopographicLine(8.8 + index * 0.54, -0.27 - index * 0.04, index * 0.7))
+  for (let index = 0; index < 5; index += 1) {
+    const guide = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.02, 0.03), metalMaterial)
+    guide.position.set(0, 0.11, -2.0 + index * 1.0)
+    plinth.add(guide)
   }
+  world.add(plinth)
 
-  const pathMaterial = new THREE.MeshStandardMaterial({ color: 0xafa99b, roughness: 0.95 })
-  for (let index = 0; index < 8; index += 1) {
-    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.54), pathMaterial)
-    stone.position.set(-4.1 + index * 0.58, 0.47, 3.15 + Math.sin(index * 1.3) * 0.22)
-    stone.rotation.y = -0.12 + Math.sin(index) * 0.08
-    stone.receiveShadow = true
-    terrain.add(stone)
-  }
+  const apartment = new THREE.Group()
+  apartment.position.set(-0.35, 0.1, -0.18)
+  world.add(apartment)
 
-  const water = new THREE.Mesh(new THREE.CylinderGeometry(2.12, 2.12, 0.12, 48), waterMaterial)
-  water.position.set(4.15, 0.48, 0.88)
-  water.scale.z = 0.58
-  terrain.add(water)
+  const floorSlab = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.22, 4.2), woodMaterial)
+  floorSlab.position.y = 0.11
+  floorSlab.castShadow = true
+  floorSlab.receiveShadow = true
+  addEdges(floorSlab)
+  apartment.add(floorSlab)
 
-  const treePositions: Array<[number, number, number, number]> = [
-    [-5.8, 0.35, -2.7, 1.25],
-    [-6.8, 0.35, 0.2, 0.88],
-    [-4.8, 0.35, 3.3, 0.72],
-    [5.9, 0.35, -2.6, 1.04],
-    [6.8, 0.35, 1.7, 0.72],
-    [3.8, 0.35, -4.3, 0.78]
-  ]
-  treePositions.forEach(([x, y, z, scale]) => {
-    const tree = createTree(scale)
-    tree.position.set(x, y, z)
-    tree.rotation.y = x * 0.3
-    tree.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.castShadow = true
-        object.receiveShadow = true
-      }
-    })
-    terrain.add(tree)
-  })
-  world.add(terrain)
-
-  const house = new THREE.Group()
-  house.position.set(-0.35, 0.42, -0.18)
-  world.add(house)
-
-  const foundation = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.34, 4.2), stoneMaterial)
-  foundation.position.y = 0.16
-  foundation.castShadow = true
-  foundation.receiveShadow = true
-  addEdges(foundation)
-  house.add(foundation)
-
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.16, 1.72), woodMaterial)
-  deck.position.set(0.4, 0.4, 2.52)
-  deck.castShadow = true
-  deck.receiveShadow = true
-  house.add(deck)
-
-  for (let index = 0; index < 12; index += 1) {
-    const seam = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.012, 1.64), metalMaterial)
-    seam.position.set(-3.7 + index * 0.74, 0.49, 2.52)
-    deck.add(seam)
+  for (let index = 0; index < 10; index += 1) {
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.012, 4.0), metalMaterial)
+    plank.position.set(-3.3 + index * 0.74, 0.115, 0)
+    floorSlab.add(plank)
   }
 
   const shell = new THREE.Group()
-  house.add(shell)
+  apartment.add(shell)
 
-  const rearWall = new THREE.Mesh(new THREE.BoxGeometry(7.15, 2.62, 0.22), stoneMaterial)
+  const rearWall = new THREE.Mesh(new THREE.BoxGeometry(7.15, 2.62, 0.22), plasterMaterial)
   rearWall.position.set(0, 1.75, -1.82)
-  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.62, 3.55), stoneMaterial)
+  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.62, 3.55), plasterMaterial)
   leftWall.position.set(-3.46, 1.75, 0)
-  const serviceCore = new THREE.Mesh(new THREE.BoxGeometry(1.58, 2.62, 3.38), woodMaterial)
-  serviceCore.position.set(2.56, 1.75, -0.02)
-  shell.add(rearWall, leftWall, serviceCore)
+  const utilityCore = new THREE.Mesh(new THREE.BoxGeometry(1.58, 2.62, 3.38), woodMaterial)
+  utilityCore.position.set(2.56, 1.75, -0.02)
+  shell.add(rearWall, leftWall, utilityCore)
 
-  const glassFacade = new THREE.Group()
-  for (let index = 0; index < 6; index += 1) {
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.98, 2.35, 0.06), glassMaterial)
-    glass.position.set(-2.73 + index * 1.08, 1.74, 1.77)
-    glass.castShadow = true
-    glassFacade.add(glass)
-    const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.055, 2.58, 0.08), metalMaterial)
-    mullion.position.set(-3.27 + index * 1.08, 1.75, 1.8)
-    glassFacade.add(mullion)
+  const windowUnit = new THREE.Group()
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.14, 1.9), plasterMaterial)
+  sill.position.set(0, -0.75, 0)
+  const header = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.52, 1.9), plasterMaterial)
+  header.position.set(0, 0.64, 0)
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.66, 1.72), glassMaterial)
+  glass.position.set(0.165, 0.11, 0)
+  glass.castShadow = true
+  windowUnit.add(sill, header, glass)
+  for (let index = 0; index < 3; index += 1) {
+    const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.78, 0.07), metalMaterial)
+    mullion.position.set(0.165, 0.11, -0.82 + index * 0.82)
+    windowUnit.add(mullion)
   }
-  const lastMullion = new THREE.Mesh(new THREE.BoxGeometry(0.055, 2.58, 0.08), metalMaterial)
-  lastMullion.position.set(3.21, 1.75, 1.8)
-  glassFacade.add(lastMullion)
-  shell.add(glassFacade)
+  leftWall.add(windowUnit)
 
   const interior = new THREE.Group()
   const floorGlow = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.05, 2.7), warmMaterial)
@@ -211,17 +132,23 @@ export const createCottageScene = (
   floorGlow.position.set(-0.38, 0.56, -0.05)
   interior.add(floorGlow)
 
-  const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.38, 0.72), new THREE.MeshStandardMaterial({ color: 0xaaa79d, roughness: 0.96 }))
+  const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.38, 0.72), fabricMaterial)
   sofaBase.position.set(-1.52, 0.82, -0.72)
-  const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.72, 0.2), sofaBase.material)
+  const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.72, 0.2), fabricMaterial)
   sofaBack.position.set(-1.52, 1.15, -1.02)
   const table = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 32), woodMaterial)
   table.position.set(-0.65, 0.8, 0.42)
   interior.add(sofaBase, sofaBack, table)
 
-  const kitchen = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.88, 0.64), darkStoneMaterial)
+  const kitchen = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.88, 0.64), darkMaterial)
   kitchen.position.set(1.42, 1.02, -1.18)
-  interior.add(kitchen)
+  const kitchenTop = new THREE.Mesh(new THREE.BoxGeometry(2.44, 0.06, 0.68), accentMaterial)
+  kitchenTop.position.set(1.42, 1.48, -1.18)
+  interior.add(kitchen, kitchenTop)
+
+  const wardrobe = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.9, 1.4), woodMaterial)
+  wardrobe.position.set(-2.9, 1.53, 1.0)
+  interior.add(wardrobe)
 
   const pendant = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), warmMaterial)
   pendant.position.set(-0.4, 2.46, 0)
@@ -230,34 +157,14 @@ export const createCottageScene = (
   interior.add(pendant, pendantWire)
   shell.add(interior)
 
-  const roof = new THREE.Group()
-  const roofLeft = new THREE.Mesh(new THREE.BoxGeometry(4.25, 0.18, 4.28), metalMaterial)
-  roofLeft.rotation.z = -0.48
-  roofLeft.position.set(-1.82, 3.56, 0)
-  const roofRight = new THREE.Mesh(new THREE.BoxGeometry(4.25, 0.18, 4.28), metalMaterial)
-  roofRight.rotation.z = 0.48
-  roofRight.position.set(1.82, 3.56, 0)
-  roofLeft.castShadow = true
-  roofRight.castShadow = true
-  roof.add(roofLeft, roofRight)
-  house.add(roof)
+  const ceiling = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.18, 4.2), plasterMaterial)
+  ceiling.position.set(0, 3.28, 0)
+  ceiling.castShadow = true
+  ceiling.receiveShadow = true
+  addEdges(ceiling)
+  apartment.add(ceiling)
 
-  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.44, 1.4, 0.55), darkStoneMaterial)
-  chimney.position.set(2.22, 4.07, -0.62)
-  house.add(chimney)
-
-  const pergola = new THREE.Group()
-  for (let index = 0; index < 5; index += 1) {
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.65), metalMaterial)
-    beam.position.set(-3.18 + index * 0.8, 2.62, 2.48)
-    pergola.add(beam)
-  }
-  const pergolaFront = new THREE.Mesh(new THREE.BoxGeometry(3.35, 0.09, 0.09), metalMaterial)
-  pergolaFront.position.set(-1.58, 2.62, 3.28)
-  pergola.add(pergolaFront)
-  house.add(pergola)
-
-  house.traverse((object) => {
+  apartment.traverse((object) => {
     if (object instanceof THREE.Mesh) {
       object.castShadow = true
       object.receiveShadow = true
@@ -274,7 +181,7 @@ export const createCottageScene = (
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3))
   const dust = new THREE.Points(
     dustGeometry,
-    new THREE.PointsMaterial({ color: 0xd8ff75, size: 0.025, transparent: true, opacity: 0.38, depthWrite: false })
+    new THREE.PointsMaterial({ color: 0xd9bc6e, size: 0.025, transparent: true, opacity: 0.38, depthWrite: false })
   )
   scene.add(dust)
 
@@ -296,7 +203,7 @@ export const createCottageScene = (
   interiorLight.position.set(-0.5, 2.4, 0.9)
   scene.add(interiorLight)
 
-  const rim = new THREE.PointLight(0xd8ff75, 18, 18, 2)
+  const rim = new THREE.PointLight(0xd9bc6e, 18, 18, 2)
   rim.position.set(7, 4, -6)
   scene.add(rim)
 
@@ -330,21 +237,18 @@ export const createCottageScene = (
     const targetProgress = mode === 'architecture' ? architectureProgress : heroProgress * 0.16
     currentProgress = THREE.MathUtils.lerp(currentProgress, targetProgress, reducedMotion ? 0.18 : 0.055)
 
-    const terrainDrop = smoothstep(0.04, 0.28, currentProgress) * 0.72
+    const plinthDrop = smoothstep(0.04, 0.28, currentProgress) * 0.72
     const shellSpread = smoothstep(0.23, 0.6, currentProgress)
-    const roofLift = smoothstep(0.14, 0.5, currentProgress) * 2.85
-    const facadeShift = smoothstep(0.42, 0.72, currentProgress) * 1.5
+    const ceilingLift = smoothstep(0.14, 0.5, currentProgress) * 2.85
+    const windowShift = smoothstep(0.42, 0.72, currentProgress) * 1.5
     const interiorLift = smoothstep(0.62, 0.92, currentProgress) * 1.05
-    terrain.position.y = -terrainDrop
-    foundation.position.y = 0.16 + shellSpread * 0.32
+    plinth.position.y = -plinthDrop
+    floorSlab.position.y = 0.11 + shellSpread * 0.32
     rearWall.position.z = -1.82 - shellSpread * 0.72
     leftWall.position.x = -3.46 - shellSpread * 0.72
-    serviceCore.position.x = 2.56 + shellSpread * 0.82
-    deck.position.z = 2.52 + smoothstep(0.5, 0.82, currentProgress) * 0.72
-    roof.position.y = roofLift
-    chimney.position.y = 4.07 + roofLift * 0.86
-    glassFacade.position.z = facadeShift
-    pergola.position.z = facadeShift * 0.62
+    utilityCore.position.x = 2.56 + shellSpread * 0.82
+    windowUnit.position.x = -windowShift
+    ceiling.position.y = 3.28 + ceilingLift
     interior.position.y = interiorLift
     interiorLight.position.y = 2.4 + interiorLift
 

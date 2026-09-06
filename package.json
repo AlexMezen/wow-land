@@ -1,5 +1,5 @@
 {
-  "name": "cottage-invest-landing",
+  "name": "elitstroy-landing",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "start": "node server/index.mjs",
     "test": "vitest run",
     "lint": "eslint .",
-    "optimize:media": "node scripts/optimize-media.mjs"
+    "optimize:media": "node scripts/optimize-media.mjs",
+    "export:content": "node scripts/export-content.mjs"
   },
   "dependencies": {
     "gsap": "3.15.0",
