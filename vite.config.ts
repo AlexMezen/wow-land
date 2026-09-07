@@ -9,6 +9,7 @@ export default defineConfig({
     }
   },
   build: {
+    cssTarget: ['safari15', 'ios15', 'chrome90', 'firefox90', 'edge90'],
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: {
