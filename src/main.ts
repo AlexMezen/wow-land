@@ -58,6 +58,7 @@ const checkIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 
 const telegramIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.91 3.79 20.3 20.84c-.25 1.21-.98 1.5-2 .94l-5.5-4.07-2.66 2.57c-.3.3-.55.56-1.1.56-.72 0-.6-.27-.84-.95L6.3 13.7l-5.45-1.7c-1.18-.35-1.19-1.16.26-1.75l21.26-8.2c.97-.43 1.9.24 1.53 1.73z"/></svg>'
 const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2a9.9 9.9 0 0 0-8.4 15.2L2 22l4.9-1.6A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 1 1-4.1 15.1l-.3-.2-2.9 1 1-2.8-.2-.3A8.1 8.1 0 0 1 12.04 3.8Zm-3.3 3.6c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.2.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-2-1c-.3-.1-.5-.2-.7.1l-1 1.2c-.2.2-.4.2-.6.1a8 8 0 0 1-2.4-1.5 8.8 8.8 0 0 1-1.6-2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.6l-.9-2c-.2-.5-.4-.4-.6-.4h-.6Z"/></svg>'
 const viberIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.5 2 2 5.9 2 10.7c0 2.6 1.3 4.9 3.4 6.5v4.3l3.9-2.1c.9.2 1.8.3 2.7.3 5.5 0 10-3.9 10-8.9S17.5 2 12 2Zm.2 2c1.9 0 3.8.6 5.2 1.9a6.7 6.7 0 0 1 2.3 5.2c0 1.9-.8 3.7-2.3 5a7.6 7.6 0 0 1-5.2 1.8l-.8-.1-2.4 1.3v-2.3l-.6-.4A6.6 6.6 0 0 1 5.3 11c0-1.9.8-3.7 2.3-5A7.6 7.6 0 0 1 12.2 4Zm-2.5 2.7c-.2 0-.5.1-.7.4-.3.3-.8.9-.8 1.9 0 1 .7 2 .8 2.2.1.2 1.4 2.3 3.5 3.1 1.7.7 2.1.6 2.5.5.5 0 1.1-.5 1.3-1 .2-.4.2-.8.1-.9l-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.3 6.3 0 0 1-1.8-1.2 6.7 6.7 0 0 1-1.2-1.6c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.2-.5l-.7-1.7c-.1-.3-.3-.3-.5-.3h-.3Z"/></svg>'
+const starIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="m10 1.7 2.55 5.17 5.7.83-4.12 4.02.97 5.67L10 14.71l-5.1 2.68.97-5.67L1.75 7.7l5.7-.83L10 1.7Z"/></svg>'
 
 const asset = (path: string): string => {
   if (/^(https?:)?\/\//.test(path) || path.startsWith(import.meta.env.BASE_URL)) return path
@@ -75,6 +76,21 @@ const buttonLink = (href: string, label: string, variant = 'button--primary'): s
   <a class="button ${variant}" href="${href}" data-track="${label}">
     <span>${label}</span>${arrowIcon}
   </a>
+`
+
+const ctaBanner = (
+  banner: { eyebrow: string; title: string; text?: string; button: string },
+  href: string,
+  variant = ''
+): string => `
+  <aside class="cta-banner ${variant} reveal">
+    <div class="cta-banner__copy">
+      <p class="eyebrow">${banner.eyebrow}</p>
+      <h3>${banner.title}</h3>
+      ${banner.text ? `<p>${banner.text}</p>` : ''}
+    </div>
+    ${buttonLink(href, banner.button)}
+  </aside>
 `
 
 const createMarkup = (copy: SiteCopy): string => {
@@ -114,6 +130,18 @@ const createMarkup = (copy: SiteCopy): string => {
       <div class="faq-item__answer"><p>${item.answer}</p></div>
     </article>
   `).join('')
+  const testimonialItems = copy.testimonials.items.map((item, index) => {
+    const rating = Math.max(0, Math.min(5, Math.round(item.rating)))
+    const stars = Array.from({ length: 5 }, (_, star) => `<span class="${star < rating ? 'is-filled' : ''}">${starIcon}</span>`).join('')
+    const monogram = Array.from(item.author.trim())[0]?.toUpperCase() ?? 'E'
+    return `
+      <article class="testimonial-card reveal${index === 0 ? ' testimonial-card--featured' : ''}">
+        <div class="testimonial-card__top"><span class="testimonial-card__quote">“</span><div class="testimonial-card__rating" aria-label="${rating} / 5">${stars}</div></div>
+        <blockquote>${item.quote}</blockquote>
+        <div class="testimonial-card__author"><span>${monogram}</span><div><strong>${item.author}</strong><small>${item.role}</small></div></div>
+      </article>
+    `
+  }).join('')
 
   const chapters = copy.architecture.chapters.map((chapter) => `
     <article class="chapter" data-chapter="${chapter.index}">
@@ -250,6 +278,7 @@ const createMarkup = (copy: SiteCopy): string => {
               </article>
             `).join('')}
           </div>
+          ${ctaBanner(copy.cta.storyBanner, '#estimate', 'cta-banner--compact')}
         </div>
       </section>
 
@@ -353,6 +382,10 @@ const createMarkup = (copy: SiteCopy): string => {
         </div>
       </section>
 
+      <div class="container">
+        ${ctaBanner(copy.cta.galleryBanner, '#contact', 'cta-banner--gold')}
+      </div>
+
       <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
@@ -393,6 +426,7 @@ const createMarkup = (copy: SiteCopy): string => {
             </div>
           </div>
           <p class="calculator-disclaimer reveal"><span>i</span>${copy.estimate.disclaimer}</p>
+          ${ctaBanner(copy.cta.estimateBanner, '#contact')}
         </div>
       </section>
 
@@ -457,6 +491,7 @@ const createMarkup = (copy: SiteCopy): string => {
               <ul>${copy.process.trustItems.map((item) => `<li>${checkIcon}<span>${item}</span></li>`).join('')}</ul>
             </div>
           </div>
+          ${ctaBanner(copy.cta.processBanner, '#contact')}
         </div>
       </section>
 
@@ -470,6 +505,22 @@ const createMarkup = (copy: SiteCopy): string => {
             <div class="faq__heading"><h2 class="display-title split-reveal">${copy.faq.title}</h2><p class="reveal">${copy.faq.lead}</p></div>
             <div class="faq__items">${faqItems}</div>
           </div>
+          ${ctaBanner(copy.cta.faqBanner, '#contact')}
+        </div>
+      </section>
+
+      <section class="testimonials" id="testimonials" data-scene="hidden">
+        <div class="container">
+          <div class="section-head section-head--dark reveal">
+            <p class="eyebrow"><span>09</span>${copy.testimonials.eyebrow}</p>
+            <p class="section-index">CLIENT VOICES / 01—${String(copy.testimonials.items.length).padStart(2, '0')}</p>
+          </div>
+          <div class="testimonials__heading">
+            <h2 class="display-title split-reveal">${copy.testimonials.title}</h2>
+            <p class="reveal">${copy.testimonials.lead}</p>
+          </div>
+          <div class="testimonials__grid">${testimonialItems}</div>
+          ${ctaBanner(copy.cta.testimonialsBanner, '#estimate', 'cta-banner--paper')}
         </div>
       </section>
 
@@ -477,7 +528,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="contact__grid" aria-hidden="true"></div>
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>09</span>${copy.contact.eyebrow}</p>
+            <p class="eyebrow"><span>10</span>${copy.contact.eyebrow}</p>
             <p class="section-index">CONTACT / START HERE</p>
           </div>
           <div class="contact__heading">
@@ -547,10 +598,20 @@ const createMarkup = (copy: SiteCopy): string => {
 
     <footer class="site-footer">
       <div class="container">
-        <div class="footer__top">${brand(copy)}<p>${copy.footer.line}</p><a href="#top" aria-label="Back to top">↑</a></div>
+        <div class="footer__top">
+          ${brand(copy)}
+          <p>${copy.footer.line}</p>
+          ${buttonLink('#contact', copy.footer.ctaButton)}
+          <a href="#top" aria-label="Back to top">↑</a>
+        </div>
         <div class="footer__bottom"><span>© ${copy.footer.rights}</span><span>${copy.footer.privacy}</span><span>KH · UA</span></div>
       </div>
     </footer>
+
+    <nav class="mobile-cta-bar" aria-label="${locale === 'uk' ? 'Швидкі дії' : 'Quick actions'}">
+      <a class="mobile-cta-bar__calculate" href="#estimate" data-track="mobile-${copy.cta.mobileBar.calculate}"><span>${copy.cta.mobileBar.calculate}</span>${arrowIcon}</a>
+      <a class="mobile-cta-bar__write" href="#contact" data-track="mobile-${copy.cta.mobileBar.write}"><span>${copy.cta.mobileBar.write}</span>${arrowIcon}</a>
+    </nav>
 
     <div class="messenger-fab" aria-label="Messengers">
       <a class="messenger-fab__btn" href="${copy.contact.telegram}" target="_blank" rel="noopener" data-fab-messenger="Telegram" aria-label="Telegram">${telegramIcon}</a>
@@ -739,6 +800,56 @@ const setupMessengerFab = (): (() => void) => {
     link.addEventListener('click', handler)
   })
   return () => handlers.forEach((handler, link) => link.removeEventListener('click', handler))
+}
+
+const setupMobileCta = (): (() => void) => {
+  const hero = select<HTMLElement>('.hero')
+  const contact = select<HTMLElement>('.contact')
+  let pastHero = false
+  let reachedContact = false
+
+  const update = (): void => {
+    document.body.classList.toggle('has-cta-bar', pastHero && !reachedContact)
+  }
+  const sync = (): void => {
+    pastHero = hero.getBoundingClientRect().bottom <= 0
+    reachedContact = contact.getBoundingClientRect().top <= window.innerHeight * 0.9
+    update()
+  }
+  const heroTrigger = ScrollTrigger.create({
+    trigger: hero,
+    start: 'bottom top',
+    end: 'max',
+    onEnter: () => {
+      pastHero = true
+      update()
+    },
+    onLeaveBack: () => {
+      pastHero = false
+      update()
+    }
+  })
+  const contactTrigger = ScrollTrigger.create({
+    trigger: contact,
+    start: 'top 90%',
+    end: 'max',
+    onEnter: () => {
+      reachedContact = true
+      update()
+    },
+    onLeaveBack: () => {
+      reachedContact = false
+      update()
+    }
+  })
+  const frame = requestAnimationFrame(sync)
+
+  return () => {
+    cancelAnimationFrame(frame)
+    heroTrigger.kill()
+    contactTrigger.kill()
+    document.body.classList.remove('has-cta-bar')
+  }
 }
 
 const setupFaq = (): (() => void) => {
@@ -1103,6 +1214,7 @@ const renderPage = (): void => {
     setupCalculator(),
     setupForm(siteContent[locale]),
     setupMessengerFab(),
+    setupMobileCta(),
     setupFaq(),
     setupPointerHud(),
     setupAnimations(),

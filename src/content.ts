@@ -142,6 +142,21 @@ export type SiteCopy = {
     lead: string
     items: Array<{ question: string; answer: string }>
   }
+  testimonials: {
+    eyebrow: string
+    title: string
+    lead: string
+    items: Array<{ quote: string; author: string; role: string; rating: number }>
+  }
+  cta: {
+    storyBanner: { eyebrow: string; title: string; text: string; button: string }
+    estimateBanner: { eyebrow: string; title: string; text: string; button: string }
+    processBanner: { eyebrow: string; title: string; text: string; button: string }
+    galleryBanner: { eyebrow: string; title: string; text: string; button: string }
+    faqBanner: { eyebrow: string; title: string; text: string; button: string }
+    testimonialsBanner: { eyebrow: string; title: string; button: string }
+    mobileBar: { calculate: string; write: string }
+  }
   contact: {
     eyebrow: string
     title: string
@@ -172,13 +187,13 @@ export type SiteCopy = {
     viber: string
     mapEmbedUrl: string
   }
-  footer: { line: string; rights: string; privacy: string }
+  footer: { line: string; ctaButton: string; rights: string; privacy: string }
 }
 
 export const content: Record<Locale, SiteCopy> = {  uk: {
     localeName: 'UA',
     metaTitle: 'eLITstroy — ремонт квартир під ключ',
-    metaDescription: 'Косметичний, капітальний та ремонт квартир під ключ: проєкт, фіксована кошторис, контроль строків і гарантія.',
+    metaDescription: 'Ремонт квартир під ключ без головного болю: дизайн-проєкт, фіксований кошторис, контроль строків і гарантія.',
     brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
     nav: {
       story: 'Підхід',
@@ -191,10 +206,10 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     hero: {
       eyebrow: 'Ремонт квартир × під ключ',
       titleTop: 'Ремонт',
-      titleAccent: 'під ключ, без сюрпризів',
-      lead: 'Беремо квартиру від стану «після будівельників» або «старий фонд» до готового простору — з дизайн-проєктом, фіксованою кошторисом і гарантією.',
-      primary: 'Розрахувати ремонт',
-      secondary: 'Дослідити етапи',
+      titleAccent: 'під ключ, без головного болю',
+      lead: 'Ви бачите ціну та результат до старту робіт. Далі — без вашого втручання: дизайн-проєкт, закупівлі, роботи та здача під нашим контролем.',
+      primary: 'Розрахувати мій ремонт',
+      secondary: 'Дивитись етапи та ціни',
       availability: 'Вільні слоти · 2026',
       scroll: 'Гортайте, щоб дослідити',
       model: 'Concept 01 / City line',
@@ -229,7 +244,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         {
           number: '03',
           title: 'Фіксована кошторис',
-          body: 'Формуємо прозорий бюджет, графік робіт і поетапне приймання без сюрпризів у фіналі.',
+          body: 'Формуємо прозорий бюджет, графік робіт і поетапне приймання — без головного болю у фіналі.',
           image: '/images/story-management.webp',
           tag: 'ПІД КЛЮЧ / БЮДЖЕТ'
         }
@@ -241,9 +256,9 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       title: 'Три дисципліни працюють як один механізм.',
       lead: 'Ми не передаємо квартиру між розрізненими бригадами. Проєкт, реалізація та контроль якості розвиваються одночасно й підтримують єдиний графік об’єкта.',
       items: [
-        { index: '01', title: 'Ремонт як система', body: 'Робота починається з планування, сценаріїв використання та бюджету — і лише потім стає інтер’єром.', metric: '01', metricLabel: 'цілісний проєкт' },
-        { index: '02', title: 'Реалізація без розривів', body: 'Закупівлі, графік і будівельні рішення перевіряються на відповідність початковій кошторисі.', metric: '360°', metricLabel: 'контроль циклу' },
-        { index: '03', title: 'Контроль після здачі', body: 'Гарантійні терміни, сервісні виїзди та стан комунікацій залишаються під нашим наглядом після здачі.', metric: '24', metricLabel: 'місяці гарантії' }
+        { index: '01', title: 'Ремонт як система', body: 'Кошторис, графік і дизайн фіксуються до старту. Рішення ухвалюються до першого етапу робіт, а не по ходу.', metric: '01', metricLabel: 'цілісний проєкт' },
+        { index: '02', title: 'Реалізація без розривів', body: 'Ви приймаєте кожен етап за чек-листом і фотоотчётом. Наступний етап не починається без вашого «так».', metric: '360°', metricLabel: 'контроль циклу' },
+        { index: '03', title: 'Контроль після здачі', body: '24 місяці гарантії: якщо щось не так, виправляємо за свій рахунок — без нагадувань.', metric: '24', metricLabel: 'місяці гарантії' }
       ]
     },
     architecture: {
@@ -310,8 +325,8 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     },
     estimate: {
       eyebrow: 'Демонстраційний розрахунок',
-      title: 'Оцініть вартість ремонту в цифрах',
-      intro: 'Налаштуйте базові параметри, щоб побачити орієнтовну смету. Точний розрахунок формується індивідуально після обстеження об’єкта.',
+      title: 'Дізнайтесь ціну ремонту за 30 секунд',
+      intro: 'Пересуньте повзунок — побачите орієнтир одразу. Точну цифру зафіксуємо в договорі після огляду, і вона не зросте.',
       area: 'Площа квартири',
       areaUnit: 'м²',
       condition: 'Тип об’єкта',
@@ -335,7 +350,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     assurance: {
       eyebrow: 'Контроль замість припущень',
       title: 'Ви бачите ремонт з чотирьох сторін.',
-      lead: 'Єдина панель рішень поєднує кошторис, графік, якість матеріалів та результат здачі.',
+      lead: 'Кошторис, графік, матеріали та здача — чотири точки контролю в одному договорі.',
       metrics: [
         { value: '01', label: 'Кошторис і бюджет', detail: 'Фіксуємо обсяг робіт, резерви, ціни матеріалів і правила прийняття рішень.' },
         { value: '02', label: 'Графік робіт', detail: 'Розкладаємо ремонт на етапи, залежності та відповідальних за кожен блок.' },
@@ -346,7 +361,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     process: {
       eyebrow: 'Від огляду до готової квартири',
       title: 'Складний процес. Проста комунікація.',
-      intro: 'Ви бачите рішення, статус і наступний крок. Ми координуємо всі етапи, щоб ремонт рухався як єдиний проєкт.',
+      intro: 'Ви отримуєте звіти й готові рішення, а не питання. Кожен етап закривається прийманням — наступний не стартує без вашого підтвердження.',
       steps: [
         {
           index: '01',
@@ -390,10 +405,30 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         { question: 'Як контролюються строки та якість?', answer: 'Через етапи з контрольними точками, фотоотчети, поетапне приймання та єдину відповідальну команду. Формат звітності погоджується на старті проєкту.' }
       ]
     },
+    testimonials: {
+      eyebrow: 'Досвід наших клієнтів',
+      title: 'Ремонт без головного болю — словами клієнтів',
+      lead: 'Не обіцянки, а відчуття людей, які вже пройшли шлях від першого огляду до готової квартири.',
+      items: [
+        { quote: 'Найцінніше — я завжди розуміла, що відбувається. Графік був перед очима, фото звітів приходили регулярно, а всі питання команда вирішувала без моєї участі.', author: 'Олена К.', role: 'Новобудова · 64 м²', rating: 5 },
+        { quote: 'Кошторис погодили до старту, і він не зріс ні на долар без нашого рішення. Вперше ремонт відчувався як керований проєкт, а не нескінченна низка проблем.', author: 'Андрій М.', role: 'Капітальний ремонт · 78 м²', rating: 5 },
+        { quote: 'Я був в іншому місті й контролював усе з телефону. Фото, статус, платежі та наступні кроки були в одному чаті. Приїхав уже приймати готову квартиру.', author: 'Дмитро В.', role: 'Інвестиційна квартира · 52 м²', rating: 5 },
+        { quote: 'Поетапне приймання дало спокій: ми бачили якість до того, як роботи переходили далі. У фіналі отримали саме той простір, який погодили в проєкті.', author: 'Марія та Ігор', role: 'Ремонт під ключ · 91 м²', rating: 5 }
+      ]
+    },
+    cta: {
+      storyBanner: { eyebrow: 'Ваш об’єкт', title: 'Цей підхід працює і для вашої квартири.', text: 'Розкажіть про планування та стан — покажемо, як це виглядає у вашому бюджеті.', button: 'Порахувати мій ремонт' },
+      estimateBanner: { eyebrow: 'Точний розрахунок', title: 'Це орієнтир. Ваша цифра — точніше.', text: 'Залиште телефон — за 20 хвилин уточнимо деталі та зафіксуємо точну цифру. Без тиску й без зобов’язань.', button: 'Отримати точний розрахунок' },
+      processBanner: { eyebrow: 'Перший крок', title: 'Ремонт без головного болю починається з однієї розмови.', text: 'За 20 хвилин визначимо формат робіт, реалістичний бюджет і наступний крок.', button: 'Обговорити квартиру' },
+      galleryBanner: { eyebrow: 'Наступний проєкт', title: 'Хочете такий самий результат?', text: 'Покажемо, як досягти цього рівня у вашій квартирі — з фіксованою ціною та строками до старту.', button: 'Обговорити мою квартиру' },
+      faqBanner: { eyebrow: 'Залишились питання', title: 'Одна розмова закриє всі.', text: 'За 20 хвилин обговоримо ваш об’єкт, бюджет і строки — без зобов’язань.', button: 'Написати нам' },
+      testimonialsBanner: { eyebrow: 'Ваш проєкт', title: 'Наступна історія про спокійний ремонт може бути вашою.', button: 'Розрахувати мій ремонт' },
+      mobileBar: { calculate: 'Розрахувати', write: 'Написати' }
+    },
     contact: {
       eyebrow: 'Почнімо з вашої квартири',
       title: 'Який ремонт ви хочете отримати?',
-      lead: 'Залиште контакти. На першій розмові визначимо формат, бюджет і наступний практичний крок.',
+      lead: 'Залиште контакти — повернемось із розрахунком протягом робочого дня. Спершу питання по вашій квартирі, потім цифри. Без тиску й без зобов’язань.',
       location: 'Харків, Україна',
       locationLabel: 'Базова локація',
       schedule: 'Пн–Пт · 09:00–18:00',
@@ -420,22 +455,22 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       viber: 'viber://chat?number=%2B380000000000',
       mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Ремонт, який працює на ваш простір.', rights: 'eLITstroy. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
+    footer: { line: 'Ремонт без головного болю. Від огляду до здачі.', ctaButton: 'Обговорити проєкт', rights: 'eLITstroy. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
   },
   en: {
     localeName: 'EN',
     metaTitle: 'eLITstroy — turnkey apartment renovation',
-    metaDescription: 'Cosmetic, capital and turnkey apartment renovation: design, fixed estimate, schedule control and warranty.',
+    metaDescription: 'Turnkey apartment renovation without the headache: design, fixed estimate, schedule control and warranty.',
     brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
     nav: { story: 'Approach', architecture: 'Renovation', estimate: 'Estimate', process: 'Process', contact: 'Contact' },
     common: { discuss: 'Discuss a project', details: 'Explore', optional: 'Optional' },
     hero: {
       eyebrow: 'Apartment renovation × turnkey',
       titleTop: 'Renovation',
-      titleAccent: 'turnkey, no surprises',
-      lead: 'We take an apartment from developer finish or dated stock to a ready living space — with a design project, fixed estimate and warranty.',
-      primary: 'Estimate your renovation',
-      secondary: 'Explore the stages',
+      titleAccent: 'turnkey, zero headaches',
+      lead: 'You see the price and the result before work begins. From there, you stay hands-off: design project, procurement, works and handover are all under our control.',
+      primary: 'Estimate my renovation',
+      secondary: 'See stages and pricing',
       availability: 'Open slots · 2026',
       scroll: 'Scroll to explore',
       model: 'Concept 01 / City line',
@@ -470,7 +505,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         {
           number: '03',
           title: 'Fixed estimate',
-          body: 'We create a transparent budget, work schedule and stage-by-stage acceptance without surprises.',
+          body: 'We create a transparent budget, work schedule and stage-by-stage acceptance — without the headache at the finish line.',
           image: '/images/story-management.webp',
           tag: 'TURNKEY / BUDGET'
         }
@@ -482,9 +517,9 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       title: 'Three disciplines work as one delivery mechanism.',
       lead: 'We do not pass the apartment between disconnected crews. Design, delivery and quality control evolve together around one schedule.',
       items: [
-        { index: '01', title: 'Renovation as a system', body: 'The concept begins with layout, usage scenarios and budget — only then does it become an interior.', metric: '01', metricLabel: 'integrated project' },
-        { index: '02', title: 'Delivery without gaps', body: 'Procurement, schedule and construction decisions are checked against the original estimate.', metric: '360°', metricLabel: 'cycle control' },
-        { index: '03', title: 'Care after handover', body: 'Warranty, service visits and documentation stay under our supervision after handover.', metric: '24', metricLabel: 'months of warranty' }
+        { index: '01', title: 'Renovation as a system', body: 'Estimate, schedule and design are fixed before work starts. Decisions are made up front, not along the way.', metric: '01', metricLabel: 'integrated project' },
+        { index: '02', title: 'Delivery without gaps', body: 'You accept every stage against a checklist and photo report. The next stage never starts without your approval.', metric: '360°', metricLabel: 'cycle control' },
+        { index: '03', title: 'Care after handover', body: '24 months of warranty: if something is off, we fix it at our cost — without reminders.', metric: '24', metricLabel: 'months of warranty' }
       ]
     },
     architecture: {
@@ -551,8 +586,8 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     },
     estimate: {
       eyebrow: 'Demonstration model',
-      title: 'Explore the renovation cost in numbers',
-      intro: 'Adjust the essentials to view an indicative estimate. A precise quotation is built individually after surveying the property.',
+      title: 'Learn your renovation price in 30 seconds',
+      intro: 'Move the slider and see an indicative figure instantly. The precise number is fixed in the contract after the survey — and it will not grow.',
       area: 'Apartment area',
       areaUnit: 'm²',
       condition: 'Property type',
@@ -576,7 +611,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     assurance: {
       eyebrow: 'Control instead of assumptions',
       title: 'You see the renovation from four sides.',
-      lead: 'One decision layer brings together the estimate, schedule, material quality and handover result.',
+      lead: 'Estimate, schedule, materials and handover — four control points in one contract.',
       metrics: [
         { value: '01', label: 'Estimate and budget', detail: 'We define the scope, reserves, material prices and decision rules.' },
         { value: '02', label: 'Work schedule', detail: 'We map the renovation into stages, dependencies and accountable owners.' },
@@ -587,7 +622,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     process: {
       eyebrow: 'From walkthrough to ready apartment',
       title: 'A complex process. Simple communication.',
-      intro: 'You see the decision, status and next step. We coordinate every stage so the renovation moves forward as one project.',
+      intro: 'You receive reports and ready decisions, not questions. Every stage closes with acceptance — the next one never starts without your confirmation.',
       steps: [
         {
           index: '01',
@@ -631,10 +666,30 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         { question: 'How are schedule and quality controlled?', answer: 'Through milestones with checkpoints, photo reports, staged acceptance and one accountable team. The reporting format is agreed at project start.' }
       ]
     },
+    testimonials: {
+      eyebrow: 'Client experience',
+      title: 'A headache-free renovation — in our clients’ words',
+      lead: 'Not promises, but the experience of people who have already gone from the first survey to a finished apartment.',
+      items: [
+        { quote: 'The most valuable part was always knowing what was happening. The schedule was visible, photo reports arrived regularly, and the team resolved every issue without pulling me into it.', author: 'Olena K.', role: 'New build · 64 m²', rating: 5 },
+        { quote: 'We agreed the estimate before work began, and it did not grow by a single dollar without our decision. For once, renovation felt like a managed project rather than an endless series of problems.', author: 'Andrii M.', role: 'Capital renovation · 78 m²', rating: 5 },
+        { quote: 'I was in another city and managed everything from my phone. Photos, status, payments and next steps stayed in one chat. I only arrived to accept the finished apartment.', author: 'Dmytro V.', role: 'Investment apartment · 52 m²', rating: 5 },
+        { quote: 'Stage-by-stage acceptance gave us peace of mind: we saw the quality before work moved forward. In the end, we received exactly the space approved in the design.', author: 'Mariia and Ihor', role: 'Turnkey renovation · 91 m²', rating: 5 }
+      ]
+    },
+    cta: {
+      storyBanner: { eyebrow: 'Your property', title: 'This approach works for your apartment too.', text: 'Tell us about the layout and condition — we will show what it looks like within your budget.', button: 'Estimate my renovation' },
+      estimateBanner: { eyebrow: 'Precise quotation', title: 'This is a guide. Your number can be precise.', text: 'Leave your phone number — in 20 minutes we will clarify the details and fix the exact figure. No pressure, no obligations.', button: 'Get a precise quotation' },
+      processBanner: { eyebrow: 'First step', title: 'A headache-free renovation starts with one conversation.', text: 'In 20 minutes, we will define the right format, a realistic budget and the next step.', button: 'Discuss your apartment' },
+      galleryBanner: { eyebrow: 'Next project', title: 'Want the same result?', text: 'We will show how to reach this level in your apartment — with a fixed price and schedule before work starts.', button: 'Discuss my apartment' },
+      faqBanner: { eyebrow: 'Still have questions', title: 'One conversation closes them all.', text: 'In 20 minutes we will cover your property, budget and timeline — no obligations.', button: 'Message us' },
+      testimonialsBanner: { eyebrow: 'Your project', title: 'The next story about a calm renovation could be yours.', button: 'Estimate my renovation' },
+      mobileBar: { calculate: 'Estimate', write: 'Message us' }
+    },
     contact: {
       eyebrow: 'Let us start with your apartment',
       title: 'What kind of renovation do you want?',
-      lead: 'Leave your details. In our first conversation, we will define the format, budget and next practical step.',
+      lead: 'Leave your details — we will come back with a quotation within one business day. First questions about your apartment, then numbers. No pressure, no obligations.',
       location: 'Kharkiv, Ukraine',
       locationLabel: 'Base location',
       schedule: 'Mon–Fri · 09:00–18:00',
@@ -661,7 +716,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       viber: 'viber://chat?number=%2B380000000000',
       mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Renovation designed for your space.', rights: 'eLITstroy. Concept 2026.', privacy: 'Your data is not shared with third parties' }
+    footer: { line: 'A headache-free renovation. From survey to handover.', ctaButton: 'Discuss a project', rights: 'eLITstroy. Concept 2026.', privacy: 'Your data is not shared with third parties' }
   }
 }
 

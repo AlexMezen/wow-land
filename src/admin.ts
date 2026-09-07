@@ -52,6 +52,8 @@ const SECTION_LABELS: Record<string, string> = {
   assurance: 'Контроль якості',
   process: 'Як ми працюємо',
   faq: 'Питання та відповіді',
+  testimonials: 'Відгуки клієнтів',
+  cta: 'CTA-блоки й мобільна панель',
   contact: 'Контакти та форма',
   footer: 'Нижня частина сайту'
 }
@@ -136,7 +138,22 @@ const FIELD_LABELS: Record<string, string> = {
   rights: 'Права / назва',
   privacy: 'Текст про приватність',
   question: 'Питання',
-  answer: 'Відповідь'
+  answer: 'Відповідь',
+  author: 'Ім’я клієнта',
+  role: 'Тип об’єкта та площа',
+  rating: 'Оцінка від 1 до 5',
+  estimateBanner: 'CTA після калькулятора',
+  processBanner: 'CTA після процесу',
+  testimonialsBanner: 'CTA після відгуків',
+  storyBanner: 'CTA після блоку «Про нас»',
+  galleryBanner: 'CTA після галереї',
+  faqBanner: 'CTA після питань',
+  ctaButton: 'Кнопка в підвалі',
+  mobileBar: 'Мобільна CTA-панель',
+  text: 'Опис CTA',
+  button: 'Текст кнопки',
+  calculate: 'Кнопка «Розрахувати»',
+  write: 'Кнопка «Написати»'
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
