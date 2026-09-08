@@ -1094,13 +1094,14 @@ const setupAnimations = (): (() => void) => {
     })
 
     if (!reducedMotion) {
+      const mobile = window.innerWidth <= 820
       gsap.utils.toArray<HTMLElement>('.story-card').forEach((card, index) => {
         const media = card.querySelector<HTMLElement>('.story-card__media')
         if (media) {
-          gsap.fromTo(media, { clipPath: 'inset(100% 0 0 0)', y: 70 }, {
+          gsap.fromTo(media, { clipPath: 'inset(100% 0 0 0)', y: mobile ? 30 : 70 }, {
             clipPath: 'inset(0% 0 0 0)',
             y: 0,
-            duration: 1.1,
+            duration: mobile ? 0.5 : 1.1,
             delay: index * 0.06,
             ease: 'power3.out',
             scrollTrigger: { trigger: card, start: 'top 86%', once: true }
@@ -1121,19 +1122,19 @@ const setupAnimations = (): (() => void) => {
         scrollTrigger: { trigger: '.value-system', start: 'top bottom', end: 'bottom top', scrub: 1 }
       })
       gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
-        gsap.fromTo(element, { y: 44, opacity: 0 }, {
+        gsap.fromTo(element, { y: mobile ? 18 : 44, opacity: 0 }, {
           y: 0,
           opacity: 1,
-          duration: 0.9,
+          duration: mobile ? 0.45 : 0.9,
           ease: 'power3.out',
           scrollTrigger: { trigger: element, start: 'top 88%', once: true }
         })
       })
       gsap.utils.toArray<HTMLElement>('.split-reveal').forEach((element) => {
-        gsap.fromTo(element, { clipPath: 'inset(0 0 100% 0)', y: 30 }, {
+        gsap.fromTo(element, { clipPath: 'inset(0 0 100% 0)', y: mobile ? 12 : 30 }, {
           clipPath: 'inset(0 0 0% 0)',
           y: 0,
-          duration: 1.15,
+          duration: mobile ? 0.5 : 1.15,
           ease: 'power3.out',
           scrollTrigger: { trigger: element, start: 'top 84%', once: true }
         })
@@ -1150,8 +1151,8 @@ const setupAnimations = (): (() => void) => {
         ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1.1 }
       })
-      gsap.fromTo('.hero-title-line', { yPercent: 115 }, { yPercent: 0, duration: 1.2, stagger: 0.1, ease: 'power4.out', delay: 0.2 })
-      gsap.fromTo('.hero-animate', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, delay: 0.55, ease: 'power2.out' })
+      gsap.fromTo('.hero-title-line', { yPercent: 115 }, { yPercent: 0, duration: mobile ? 0.7 : 1.2, stagger: 0.1, ease: 'power4.out', delay: mobile ? 0.1 : 0.2 })
+      gsap.fromTo('.hero-animate', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, delay: mobile ? 0.25 : 0.55, ease: 'power2.out' })
       gsap.to('.hero__content', {
         yPercent: 10,
         opacity: 0.35,

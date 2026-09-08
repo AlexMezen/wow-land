@@ -25,8 +25,8 @@
       "titleTop": "Ремонт",
       "titleAccent": "під ключ, без головного болю",
       "lead": "Ви бачите ціну та результат до старту робіт. Далі — без вашого втручання: дизайн-проєкт, закупівлі, роботи та здача під нашим контролем.",
-      "primary": "Розрахувати мій ремонт",
-      "secondary": "Дивитись етапи та ціни",
+      "primary": "Розрахувати ремонт",
+      "secondary": "Дивитись ціни",
       "availability": "Вільні слоти · 2026",
       "scroll": "Гортайте, щоб дослідити",
       "model": "Concept 01 / City line",
@@ -408,7 +408,11 @@
       "testimonialsBanner": {
         "eyebrow": "Ваш проєкт",
         "title": "Наступна історія про спокійний ремонт може бути вашою.",
-        "button": "Розрахувати мій ремонт"
+        "button": "Розрахувати ремонт"
+      },
+      "quickNav": {
+        "calculate": "Розрахувати ремонт",
+        "write": "Написати нам"
       },
       "mobileBar": {
         "calculate": "Розрахувати",
@@ -871,6 +875,10 @@
         "eyebrow": "Your project",
         "title": "The next story about a calm renovation could be yours.",
         "button": "Estimate my renovation"
+      },
+      "quickNav": {
+        "calculate": "Estimate renovation",
+        "write": "Message us"
       },
       "mobileBar": {
         "calculate": "Estimate",

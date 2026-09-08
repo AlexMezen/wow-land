@@ -155,6 +155,7 @@ export type SiteCopy = {
     galleryBanner: { eyebrow: string; title: string; text: string; button: string }
     faqBanner: { eyebrow: string; title: string; text: string; button: string }
     testimonialsBanner: { eyebrow: string; title: string; button: string }
+    quickNav: { calculate: string; write: string }
     mobileBar: { calculate: string; write: string }
   }
   contact: {
@@ -208,8 +209,8 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       titleTop: 'Ремонт',
       titleAccent: 'під ключ, без головного болю',
       lead: 'Ви бачите ціну та результат до старту робіт. Далі — без вашого втручання: дизайн-проєкт, закупівлі, роботи та здача під нашим контролем.',
-      primary: 'Розрахувати мій ремонт',
-      secondary: 'Дивитись етапи та ціни',
+      primary: 'Розрахувати ремонт',
+      secondary: 'Дивитись ціни',
       availability: 'Вільні слоти · 2026',
       scroll: 'Гортайте, щоб дослідити',
       model: 'Concept 01 / City line',
@@ -422,7 +423,8 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       processBanner: { eyebrow: 'Перший крок', title: 'Ремонт без головного болю починається з однієї розмови.', text: 'За 20 хвилин визначимо формат робіт, реалістичний бюджет і наступний крок.', button: 'Обговорити квартиру' },
       galleryBanner: { eyebrow: 'Наступний проєкт', title: 'Хочете такий самий результат?', text: 'Покажемо, як досягти цього рівня у вашій квартирі — з фіксованою ціною та строками до старту.', button: 'Обговорити мою квартиру' },
       faqBanner: { eyebrow: 'Залишились питання', title: 'Одна розмова закриє всі.', text: 'За 20 хвилин обговоримо ваш об’єкт, бюджет і строки — без зобов’язань.', button: 'Написати нам' },
-      testimonialsBanner: { eyebrow: 'Ваш проєкт', title: 'Наступна історія про спокійний ремонт може бути вашою.', button: 'Розрахувати мій ремонт' },
+      testimonialsBanner: { eyebrow: 'Ваш проєкт', title: 'Наступна історія про спокійний ремонт може бути вашою.', button: 'Розрахувати ремонт' },
+      quickNav: { calculate: 'Розрахувати ремонт', write: 'Написати нам' },
       mobileBar: { calculate: 'Розрахувати', write: 'Написати' }
     },
     contact: {
@@ -684,6 +686,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       galleryBanner: { eyebrow: 'Next project', title: 'Want the same result?', text: 'We will show how to reach this level in your apartment — with a fixed price and schedule before work starts.', button: 'Discuss my apartment' },
       faqBanner: { eyebrow: 'Still have questions', title: 'One conversation closes them all.', text: 'In 20 minutes we will cover your property, budget and timeline — no obligations.', button: 'Message us' },
       testimonialsBanner: { eyebrow: 'Your project', title: 'The next story about a calm renovation could be yours.', button: 'Estimate my renovation' },
+      quickNav: { calculate: 'Estimate renovation', write: 'Message us' },
       mobileBar: { calculate: 'Estimate', write: 'Message us' }
     },
     contact: {

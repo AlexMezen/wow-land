@@ -149,6 +149,7 @@ const FIELD_LABELS: Record<string, string> = {
   galleryBanner: 'CTA після галереї',
   faqBanner: 'CTA після питань',
   ctaButton: 'Кнопка в підвалі',
+  quickNav: 'Швидкі кнопки під першим екраном (мобайл)',
   mobileBar: 'Мобільна CTA-панель',
   text: 'Опис CTA',
   button: 'Текст кнопки',
