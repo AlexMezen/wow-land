@@ -4,16 +4,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { content, loadContent, type Locale, type SiteCopy } from './content'
 import { calculateEstimate, formatArea, formatCurrency } from './estimate'
 import { initAnalytics, track } from './analytics'
-import type { InteriorSceneController } from './scene'
 
 gsap.registerPlugin(ScrollTrigger)
 ScrollTrigger.config({ ignoreMobileResize: true })
 
 const app = document.querySelector<HTMLElement>('#app')
-const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')
 const loader = document.querySelector<HTMLElement>('#loader')
 
-if (!app || !canvas) throw new Error('Application root is missing')
+if (!app) throw new Error('Application root is missing')
 
 const LEADS_ENDPOINT = '/api/leads'
 const LEADS_STORAGE_KEY = 'elitstroy-leads'
@@ -30,9 +28,6 @@ type Lead = {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-const webGLAllowed = !reducedMotion && !connection?.saveData && window.innerWidth > 820 && (!isIOS || window.innerWidth >= 1000)
 let viewportWidth = window.innerWidth
 const syncViewportHeight = (force = false): void => {
   if (!force && Math.abs(window.innerWidth - viewportWidth) < 60) return
@@ -48,7 +43,6 @@ window.addEventListener('orientationchange', () => window.setTimeout(() => {
 }, 280))
 let locale: Locale = localStorage.getItem('elitstroy-locale') === 'en' ? 'en' : 'uk'
 let siteContent: Record<Locale, SiteCopy> = content
-let sceneController: InteriorSceneController | null = null
 let cleanPage = (): void => undefined
 let loaderDismissed = false
 
@@ -105,14 +99,6 @@ const createMarkup = (copy: SiteCopy): string => {
     <button type="button" data-condition="${condition.id}" data-multiplier="${condition.multiplier}"${index === 1 ? ' class="is-active"' : ''}>${condition.name}</button>
   `).join('')
 
-  const storyWords = copy.story.title.split(' ').map((word, index) => `<span class="story-word" data-word="${index}">${word}</span>`).join(' ')
-  const valueItems = copy.value.items.map((item) => `
-    <article class="value-item">
-      <span class="value-item__index">${item.index}</span>
-      <div><h3>${item.title}</h3><p>${item.body}</p></div>
-      <div class="value-item__metric"><strong>${item.metric}</strong><span>${item.metricLabel}</span></div>
-    </article>
-  `).join('')
   const galleryItems = copy.gallery.items.map((item) => `
     <article class="gallery-card">
       <div class="gallery-card__media"><img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"></div>
@@ -143,20 +129,6 @@ const createMarkup = (copy: SiteCopy): string => {
     `
   }).join('')
 
-  const chapters = copy.architecture.chapters.map((chapter) => `
-    <article class="chapter" data-chapter="${chapter.index}">
-      <div class="chapter__media">
-        <img src="${chapter.image}" alt="${chapter.title}" loading="lazy" decoding="async" width="1280" height="720">
-        <span class="chapter__badge">${chapter.tag}</span>
-      </div>
-      <div class="chapter__line"><span>${chapter.index}</span><i></i></div>
-      <p class="eyebrow">${chapter.eyebrow}</p>
-      <h3>${chapter.title}</h3>
-      <p class="chapter__body">${chapter.body}</p>
-      <div class="chapter__metric"><strong>${chapter.metric}</strong><span>${chapter.metricLabel}</span></div>
-    </article>
-  `).join('')
-
   const processSteps = copy.process.steps.map((step) => `
     <article class="process-step reveal">
       <div class="process-step__media">
@@ -179,8 +151,6 @@ const createMarkup = (copy: SiteCopy): string => {
       <div class="site-header__inner">
         ${brand(copy)}
         <nav class="desktop-nav" aria-label="${locale === 'uk' ? 'Головна навігація' : 'Main navigation'}">
-          <a href="#story">${copy.nav.story}</a>
-          <a href="#architecture">${copy.nav.architecture}</a>
           <a href="#estimate">${copy.nav.estimate}</a>
           <a href="#process">${copy.nav.process}</a>
         </nav>
@@ -196,11 +166,9 @@ const createMarkup = (copy: SiteCopy): string => {
       </div>
       <div class="mobile-menu" aria-hidden="true">
         <nav>
-          <a href="#story"><span>01</span>${copy.nav.story}</a>
-          <a href="#architecture"><span>02</span>${copy.nav.architecture}</a>
-          <a href="#estimate"><span>03</span>${copy.nav.estimate}</a>
-          <a href="#process"><span>04</span>${copy.nav.process}</a>
-          <a href="#contact"><span>05</span>${copy.nav.contact}</a>
+          <a href="#estimate"><span>01</span>${copy.nav.estimate}</a>
+          <a href="#process"><span>02</span>${copy.nav.process}</a>
+          <a href="#contact"><span>03</span>${copy.nav.contact}</a>
         </nav>
         <p>Kharkiv · Ukraine · 49.9935° N</p>
       </div>
@@ -238,137 +206,10 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="scene-index"><span>CGI · 001</span><span>49.9935° N · 36.2304° E</span></div>
       </section>
 
-      <section class="story" id="story" data-scene="hidden">
-        <div class="container">
-          <div class="section-head reveal">
-            <p class="eyebrow"><span>01</span>${copy.story.eyebrow}</p>
-            <p class="section-index">APPROACH / PLAN—RESULT</p>
-          </div>
-        </div>
-        <div class="story__formation">
-          <div class="story__formation-bg" aria-hidden="true">
-            <img src="${asset(copy.story.formationImage)}" alt="" loading="lazy" decoding="async" width="1280" height="720">
-          </div>
-          <div class="story__sticky">
-            <div class="story__shape" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div>
-            <div class="container story__formation-copy">
-              <p class="story__counter">00 / <span>03</span></p>
-              <h2 class="story__forming-title">${storyWords}</h2>
-              <div class="story__forming-bottom">
-                <p class="story__forming-lead">${copy.story.lead}</p>
-                <blockquote><span>“</span>${copy.story.quote}</blockquote>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="container">
-          <div class="story__cards-head reveal"><p>THREE LAYERS / ONE RESULT</p><span>01—03</span></div>
-          <div class="story__cards">
-            ${copy.story.cards.map((card) => `
-              <article class="story-card reveal">
-                <div class="story-card__media">
-                  <img src="${card.image}" alt="${card.title}" loading="lazy" decoding="async" width="800" height="600">
-                  <div class="story-card__badge"><span>${card.tag}</span></div>
-                </div>
-                <div class="story-card__content">
-                  <span class="story-card__number">${card.number}</span>
-                  <h3>${card.title}</h3>
-                  <p>${card.body}</p>
-                </div>
-              </article>
-            `).join('')}
-          </div>
-          ${ctaBanner(copy.cta.storyBanner, '#estimate', 'cta-banner--compact')}
-        </div>
-      </section>
-
-      <section class="value-system" id="value-system" data-scene="hidden">
-        <div class="value-system__marquee" aria-hidden="true"><span>${copy.value.marquee}</span><span>${copy.value.marquee}</span></div>
-        <div class="container">
-          <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>02</span>${copy.value.eyebrow}</p>
-            <p class="section-index">SYSTEM / INTEGRATED</p>
-          </div>
-          <div class="value-system__heading">
-            <h2 class="display-title split-reveal">${copy.value.title}</h2>
-            <p class="reveal">${copy.value.lead}</p>
-          </div>
-          <div class="value-system__items">${valueItems}</div>
-        </div>
-      </section>
-
-      <section class="architecture scene-section" id="architecture" data-scene="architecture">
-        <div class="container architecture__intro reveal">
-          <div class="section-head section-head--dark">
-            <p class="eyebrow"><span>03</span>${copy.architecture.eyebrow}</p>
-            <p class="section-index">PRODUCT / CGI—EXPLODED</p>
-          </div>
-          <div class="architecture__intro-grid">
-            <h2 class="display-title">${copy.architecture.title}</h2>
-            <p>${copy.architecture.intro}</p>
-          </div>
-        </div>
-        <div class="architecture__story">
-          <div class="architecture__stage" id="architecture-stage">
-            <div class="architecture__side-photo architecture__side-photo--left">
-              ${copy.architecture.chapters.map((chapter, index) => `<figure class="${index === 0 ? 'is-active' : ''}" data-side-photo="${index}"><img src="${chapter.image}" alt="" loading="lazy" decoding="async" width="480" height="640"><figcaption>${chapter.index} / ${chapter.eyebrow}</figcaption></figure>`).join('')}
-            </div>
-            <div class="architecture__side-photo architecture__side-photo--right">
-              ${copy.architecture.chapters.map((chapter, index) => `<figure class="${index === 1 ? 'is-active' : ''}" data-side-photo="${index}"><img src="${chapter.image}" alt="" loading="lazy" decoding="async" width="480" height="640"><figcaption>${chapter.tag}</figcaption></figure>`).join('')}
-            </div>
-            <div class="stage-frame">
-              <div class="stage-hud">
-                <div class="stage-hud__item">
-                  <span>MODEL</span>
-                  <b>CONCEPT 01 / STUDIO—FLAT</b>
-                </div>
-                <div class="stage-hud__item">
-                  <span>ACTIVE LAYER</span>
-                  <b id="stage-layer-name" class="stage-hud__accent">${copy.architecture.chapters[0].tag}</b>
-                </div>
-                <div class="stage-hud__item stage-hud__item--right">
-                  <span>RENDER MODE</span>
-                  <b class="live-dot">REALTIME WEBGL</b>
-                </div>
-              </div>
-              <div class="stage-photos" id="stage-photos">
-                ${copy.architecture.chapters.map((chapter, index) => `
-                  <div class="stage-photo${index === 0 ? ' is-active' : ''}" data-layer="${chapter.index}">
-                    <img src="${chapter.image}" alt="${chapter.title}" decoding="async" width="1280" height="720">
-                    <div class="stage-photo__glass">
-                      <span class="stage-photo__num">${chapter.index}</span>
-                      <div>
-                        <strong>${chapter.eyebrow} · ${chapter.title}</strong>
-                        <small>${chapter.metric} ${chapter.metricLabel}</small>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-                <div class="stage-webgl-overlay" aria-hidden="true">
-                  <div class="stage-reticle"><i></i><i></i><span></span></div>
-                  <p>MOVE CURSOR / ORBIT VIEW</p>
-                  <span>X <b id="stage-coordinate-x">0.00</b> · Y <b id="stage-coordinate-y">0.00</b></span>
-                </div>
-              </div>
-              <div class="stage-timeline">
-                ${copy.architecture.chapters.map((chapter, index) => `
-                  <div class="stage-timeline__step${index === 0 ? ' is-active' : ''}" data-step="${chapter.index}">
-                    <span>${chapter.index}</span>
-                    <i></i>
-                    <small>${chapter.eyebrow}</small>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-          <div class="architecture__chapters">${chapters}</div>
-        </div>
-      </section>
-
       <section class="gallery" id="gallery" data-scene="hidden">
         <div class="container gallery__heading">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>04</span>${copy.gallery.eyebrow}</p>
+            <p class="eyebrow"><span>01</span>${copy.gallery.eyebrow}</p>
             <p class="section-index">COLLECTION / 01—06</p>
           </div>
           <div class="gallery__intro">
@@ -389,7 +230,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>05</span>${copy.estimate.eyebrow}</p>
+            <p class="eyebrow"><span>02</span>${copy.estimate.eyebrow}</p>
             <p class="section-index">ESTIMATE / COST—SIMULATION</p>
           </div>
           <div class="investment__heading">
@@ -430,44 +271,10 @@ const createMarkup = (copy: SiteCopy): string => {
         </div>
       </section>
 
-      <section class="assurance" id="assurance" data-scene="hidden">
-        <div class="container">
-          <div class="section-head reveal">
-            <p class="eyebrow"><span>06</span>${copy.assurance.eyebrow}</p>
-            <p class="section-index">CONTROL ROUTE / 01—04</p>
-          </div>
-          <div class="assurance__heading">
-            <h2 class="display-title split-reveal">${copy.assurance.title}</h2>
-            <p class="reveal">${copy.assurance.lead}</p>
-          </div>
-          <div class="assurance__journey">
-            <div class="assurance__stage">
-              <div class="assurance-orbit" aria-hidden="true">
-                <i></i><i></i><i></i><i></i>
-                <div><span>ACTIVE STAGE</span><strong id="assurance-active-number">01</strong><small>CONTROL CYCLE</small></div>
-                <b id="assurance-orbit-dot"></b>
-              </div>
-              <div class="assurance__stage-meta"><span>CI / ROUTE MAP</span><b><i></i>LIVE CONTROL</b></div>
-              <div class="assurance__stage-progress"><span id="assurance-progress"></span></div>
-            </div>
-            <div class="assurance__steps">
-              ${copy.assurance.metrics.map((metric, index) => `
-                <article class="assurance-step${index === 0 ? ' is-active' : ''}" data-assurance-step="${metric.value}">
-                  <div class="assurance-step__top"><span>${metric.value}</span><small>${index === copy.assurance.metrics.length - 1 ? 'RESULT' : 'CHECKPOINT'}</small></div>
-                  <h3>${metric.label}</h3>
-                  <p>${metric.detail}</p>
-                  <div class="assurance-step__status"><i></i><span>${index === 0 ? 'BUDGET' : index === 1 ? 'SCHEDULE' : index === 2 ? 'QUALITY' : 'WARRANTY'}</span><b>${String((index + 1) * 25).padStart(2, '0')}%</b></div>
-                </article>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="process" id="process" data-scene="hidden">
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>07</span>${copy.process.eyebrow}</p>
+            <p class="eyebrow"><span>03</span>${copy.process.eyebrow}</p>
             <p class="section-index">DELIVERY / 01—04</p>
           </div>
           <div class="process__heading">
@@ -498,7 +305,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="faq" id="faq" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>08</span>${copy.faq.eyebrow}</p>
+            <p class="eyebrow"><span>04</span>${copy.faq.eyebrow}</p>
             <p class="section-index">FAQ / CLEAR ANSWERS</p>
           </div>
           <div class="faq__layout">
@@ -512,7 +319,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="testimonials" id="testimonials" data-scene="hidden">
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>09</span>${copy.testimonials.eyebrow}</p>
+            <p class="eyebrow"><span>05</span>${copy.testimonials.eyebrow}</p>
             <p class="section-index">CLIENT VOICES / 01—${String(copy.testimonials.items.length).padStart(2, '0')}</p>
           </div>
           <div class="testimonials__heading">
@@ -528,7 +335,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="contact__grid" aria-hidden="true"></div>
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>10</span>${copy.contact.eyebrow}</p>
+            <p class="eyebrow"><span>06</span>${copy.contact.eyebrow}</p>
             <p class="section-index">CONTACT / START HERE</p>
           </div>
           <div class="contact__heading">
@@ -937,107 +744,11 @@ const setupNavigation = (): (() => void) => {
 
 const setupAnimations = (): (() => void) => {
   const progress = select<HTMLElement>('.site-progress span')
-  const chapters = [...document.querySelectorAll<HTMLElement>('.chapter')]
   const context = gsap.context(() => {
     ScrollTrigger.create({
       start: 0,
       end: 'max',
       onUpdate: (self) => gsap.set(progress, { scaleX: self.progress })
-    })
-
-    const storyWords = gsap.utils.toArray<HTMLElement>('.story-word')
-    const storyCounter = document.querySelector<HTMLElement>('.story__counter span')
-    const isMobileViewport = window.innerWidth <= 820
-    if (!reducedMotion && storyWords.length > 0 && !isMobileViewport) {
-      gsap.set(storyWords, { opacity: 0.08, yPercent: 65, rotateX: -70, filter: 'blur(12px)', transformOrigin: '50% 100%' })
-      gsap.set(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 35 })
-      const storyTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.story__formation',
-          start: 'top 68%',
-          once: true
-        }
-      })
-      storyTimeline.eventCallback('onUpdate', () => {
-        if (storyCounter) storyCounter.textContent = String(Math.max(1, Math.ceil(storyTimeline.progress() * 3))).padStart(2, '0')
-      })
-      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.1, stagger: 0.05, ease: 'power2.out' }, 0)
-      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, stagger: 0.06, ease: 'power2.out' }, 0.1)
-      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.7)
-      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.8)
-      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
-        yPercent: 9,
-        scale: 1.02,
-        ease: 'none',
-        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
-      })
-    } else if (!reducedMotion && storyWords.length > 0) {
-      gsap.fromTo('.story__forming-title', { opacity: 0, y: 34 }, {
-        opacity: 1,
-        y: 0,
-        duration: 0.9,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: '.story__formation', start: 'top 72%', once: true }
-      })
-      gsap.fromTo(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 26 }, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        stagger: 0.08,
-        scrollTrigger: { trigger: '.story__formation', start: 'top 62%', once: true }
-      })
-      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
-        yPercent: 9,
-        scale: 1.02,
-        ease: 'none',
-        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
-      })
-    }
-
-    ScrollTrigger.create({
-      trigger: '.architecture',
-      start: 'top 42%',
-      end: 'bottom bottom',
-      onEnter: () => sceneController?.setMode('architecture'),
-      onEnterBack: () => sceneController?.setMode('architecture'),
-      onLeave: () => sceneController?.setMode('hidden'),
-      onLeaveBack: () => sceneController?.setMode('hidden'),
-      onUpdate: (self) => sceneController?.setArchitectureProgress(self.progress)
-    })
-
-    const stagePhotos = [...document.querySelectorAll<HTMLElement>('.stage-photo')]
-    const stageSteps = [...document.querySelectorAll<HTMLElement>('.stage-timeline__step')]
-    const sidePhotosLeft = [...document.querySelectorAll<HTMLElement>('.architecture__side-photo--left figure')]
-    const sidePhotosRight = [...document.querySelectorAll<HTMLElement>('.architecture__side-photo--right figure')]
-    const stageLayerName = document.querySelector<HTMLElement>('#stage-layer-name')
-
-    const setStageIndex = (idx: number): void => {
-      stagePhotos.forEach((photo, i) => {
-        photo.classList.toggle('is-active', i === idx)
-      })
-      stageSteps.forEach((step, i) => {
-        step.classList.toggle('is-active', i === idx)
-      })
-      sidePhotosLeft.forEach((photo, i) => photo.classList.toggle('is-active', i === idx))
-      sidePhotosRight.forEach((photo, i) => photo.classList.toggle('is-active', i === (idx + 1) % sidePhotosRight.length))
-      if (stageLayerName && siteContent[locale].architecture.chapters[idx]) {
-        stageLayerName.textContent = siteContent[locale].architecture.chapters[idx].tag
-      }
-    }
-
-    chapters.forEach((chapter, index) => {
-      ScrollTrigger.create({
-        trigger: chapter,
-        start: 'top 62%',
-        end: 'bottom 38%',
-        onToggle: (self) => {
-          chapter.classList.toggle('is-active', self.isActive)
-          if (self.isActive) {
-            setStageIndex(index)
-            sceneController?.setArchitectureProgress(index / Math.max(chapters.length - 1, 1))
-          }
-        }
-      })
     })
 
     const galleryTrack = document.querySelector<HTMLElement>('.gallery__track')
@@ -1064,63 +775,8 @@ const setupAnimations = (): (() => void) => {
       })
     }
 
-    const assuranceSteps = [...document.querySelectorAll<HTMLElement>('.assurance-step')]
-    const assuranceNumber = document.querySelector<HTMLElement>('#assurance-active-number')
-    const assuranceProgress = document.querySelector<HTMLElement>('#assurance-progress')
-    const assuranceOrbit = document.querySelector<HTMLElement>('.assurance-orbit')
-    assuranceSteps.forEach((step, index) => {
-      const mobile = window.innerWidth <= 820
-      ScrollTrigger.create({
-        trigger: step,
-        start: mobile ? 'top 76%' : 'top 62%',
-        end: 'bottom 38%',
-        onToggle: (self) => {
-          if (!self.isActive) return
-          assuranceSteps.forEach((item) => item.classList.toggle('is-active', item === step))
-          if (assuranceNumber) assuranceNumber.textContent = String(index + 1).padStart(2, '0')
-          assuranceProgress?.style.setProperty('width', `${((index + 1) / assuranceSteps.length) * 100}%`)
-          assuranceOrbit?.style.setProperty('--assurance-angle', `${index * 90 + 35}deg`)
-        }
-      })
-      if (!reducedMotion) {
-        const mobile = window.innerWidth <= 820
-        gsap.fromTo(step, { xPercent: mobile ? 0 : index % 2 === 0 ? 12 : -8, opacity: 0.18 }, {
-          xPercent: 0,
-          opacity: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: step, start: mobile ? 'top 96%' : 'top 92%', end: mobile ? 'top 68%' : 'top 52%', scrub: 0.7 }
-        })
-      }
-    })
-
     if (!reducedMotion) {
       const mobile = window.innerWidth <= 820
-      gsap.utils.toArray<HTMLElement>('.story-card').forEach((card, index) => {
-        const media = card.querySelector<HTMLElement>('.story-card__media')
-        if (media) {
-          gsap.fromTo(media, { clipPath: 'inset(100% 0 0 0)', y: mobile ? 30 : 70 }, {
-            clipPath: 'inset(0% 0 0 0)',
-            y: 0,
-            duration: mobile ? 0.5 : 1.1,
-            delay: index * 0.06,
-            ease: 'power3.out',
-            scrollTrigger: { trigger: card, start: 'top 86%', once: true }
-          })
-        }
-      })
-      gsap.utils.toArray<HTMLElement>('.value-item').forEach((item) => {
-        gsap.fromTo(item, { opacity: 0.22, xPercent: 6 }, {
-          opacity: 1,
-          xPercent: 0,
-          ease: 'none',
-          scrollTrigger: { trigger: item, start: 'top 82%', end: 'top 48%', scrub: 0.5 }
-        })
-      })
-      gsap.to('.value-system__marquee', {
-        xPercent: -18,
-        ease: 'none',
-        scrollTrigger: { trigger: '.value-system', start: 'top bottom', end: 'bottom top', scrub: 1 }
-      })
       gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
         gsap.fromTo(element, { y: mobile ? 18 : 44, opacity: 0 }, {
           y: 0,
@@ -1231,34 +887,6 @@ const bootstrap = async (): Promise<void> => {
   const loaderImage = loader?.querySelector('img')
   if (loaderImage) loaderImage.src = asset(siteContent[locale].brand.image)
   renderPage()
-
-  if (webGLAllowed) {
-    const architecture = select<HTMLElement>('#architecture')
-    let sceneRequested = false
-    const loadScene = (): void => {
-      if (sceneRequested) return
-      sceneRequested = true
-      import('./scene')
-        .then(({ createInteriorScene }) => {
-          sceneController = createInteriorScene(canvas, reducedMotion)
-          document.body.classList.add('has-webgl')
-          const bounds = architecture.getBoundingClientRect()
-          sceneController.setMode(bounds.top < window.innerHeight && bounds.bottom > 0 ? 'architecture' : 'hidden')
-          ScrollTrigger.refresh()
-        })
-        .catch(() => document.body.classList.add('no-webgl'))
-    }
-    const sceneObserver = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return
-      sceneObserver.disconnect()
-      loadScene()
-    }, { rootMargin: '120% 0px' })
-    sceneObserver.observe(architecture)
-    window.setTimeout(loadScene, 4500)
-  } else {
-    canvas.remove()
-    document.body.classList.add('no-webgl')
-  }
 
   dismissLoader()
   window.setTimeout(dismissLoader, 1800)
