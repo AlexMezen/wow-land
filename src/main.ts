@@ -116,18 +116,48 @@ const createMarkup = (copy: SiteCopy): string => {
       <div class="faq-item__answer"><p>${item.answer}</p></div>
     </article>
   `).join('')
-  const testimonialItems = copy.testimonials.items.map((item, index) => {
+  const messengerIcon = (type: string): string => {
+    if (type === 'Telegram') return telegramIcon
+    if (type === 'WhatsApp') return whatsappIcon
+    return viberIcon
+  }
+
+  const testimonialSlides = copy.testimonials.items.map((item, index) => {
     const rating = Math.max(0, Math.min(5, Math.round(item.rating)))
     const stars = Array.from({ length: 5 }, (_, star) => `<span class="${star < rating ? 'is-filled' : ''}">${starIcon}</span>`).join('')
     const monogram = Array.from(item.author.trim())[0]?.toUpperCase() ?? 'E'
+    const messengerClass = `testimonial-slide__messenger--${item.messenger.toLowerCase()}`
+    const slideAria = locale === 'uk' ? `${index + 1} з ${copy.testimonials.items.length}` : `${index + 1} of ${copy.testimonials.items.length}`
     return `
-      <article class="testimonial-card reveal${index === 0 ? ' testimonial-card--featured' : ''}">
-        <div class="testimonial-card__top"><span class="testimonial-card__quote">“</span><div class="testimonial-card__rating" aria-label="${rating} / 5">${stars}</div></div>
-        <blockquote>${item.quote}</blockquote>
-        <div class="testimonial-card__author"><span>${monogram}</span><div><strong>${item.author}</strong><small>${item.role}</small></div></div>
-      </article>
+      <div class="testimonial-slide${index === 0 ? ' is-active' : ''}" data-index="${index}" role="group" aria-roledescription="slide" aria-label="${slideAria}">
+        <article class="testimonial-card">
+          <div class="testimonial-card__header">
+            <div class="testimonial-card__author">
+              <span class="testimonial-card__avatar">${monogram}</span>
+              <div>
+                <strong>${item.author}</strong>
+                <small>${item.role}</small>
+              </div>
+            </div>
+            <div class="testimonial-card__meta">
+              <span class="testimonial-slide__messenger ${messengerClass}">
+                ${messengerIcon(item.messenger)}
+                <span>${item.messenger}</span>
+              </span>
+              <div class="testimonial-card__rating" aria-label="${rating} / 5">${stars}</div>
+            </div>
+          </div>
+          <div class="testimonial-card__screen">
+            <img src="${asset(item.image)}" alt="${item.author} - ${item.messenger}" loading="lazy" decoding="async" width="480" height="850">
+          </div>
+        </article>
+      </div>
     `
   }).join('')
+
+  const testimonialDots = copy.testimonials.items.map((_, index) => `
+    <button class="testimonials__dot${index === 0 ? ' is-active' : ''}" data-slide-to="${index}" type="button" aria-label="${locale === 'uk' ? `Перейти до відгуку ${index + 1}` : `Go to review ${index + 1}`}"></button>
+  `).join('')
 
   const processSteps = copy.process.steps.map((step) => `
     <article class="process-step reveal">
@@ -206,10 +236,43 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="scene-index"><span>CGI · 001</span><span>49.9935° N · 36.2304° E</span></div>
       </section>
 
+      <section class="packages" id="packages" data-scene="hidden">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow"><span>01</span>${copy.packages.eyebrow}</p>
+            <p class="section-index">PACKAGES / FIXED PRICE</p>
+          </div>
+          <div class="packages__heading">
+            <h2 class="display-title split-reveal">${copy.packages.title}</h2>
+            <p class="reveal">${copy.packages.intro}</p>
+          </div>
+          <div class="packages__grid">
+            ${copy.packages.items.map((pkg, index) => `
+              <article class="package-card${index === 1 ? ' package-card--featured' : ''} reveal">
+                <div class="package-card__head">
+                  <span class="package-card__badge">${pkg.badge}</span>
+                  <h3>${pkg.name}</h3>
+                </div>
+                <div class="package-card__price">
+                  <strong>${pkg.pricePerSqm}</strong>
+                  <span>${pkg.timeline}</span>
+                  <small>${pkg.guarantee}</small>
+                </div>
+                <p class="package-card__desc">${pkg.description}</p>
+                <ul class="package-card__features">
+                  ${pkg.features.map((feature) => `<li>${feature}</li>`).join('')}
+                </ul>
+                ${buttonLink('#estimate', pkg.cta, index === 1 ? '' : 'button--ghost')}
+              </article>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+
       <section class="gallery" id="gallery" data-scene="hidden">
         <div class="container gallery__heading">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>01</span>${copy.gallery.eyebrow}</p>
+            <p class="eyebrow"><span>02</span>${copy.gallery.eyebrow}</p>
             <p class="section-index">COLLECTION / 01—06</p>
           </div>
           <div class="gallery__intro">
@@ -230,7 +293,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>02</span>${copy.estimate.eyebrow}</p>
+            <p class="eyebrow"><span>03</span>${copy.estimate.eyebrow}</p>
             <p class="section-index">ESTIMATE / COST—SIMULATION</p>
           </div>
           <div class="investment__heading">
@@ -274,7 +337,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="process" id="process" data-scene="hidden">
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>03</span>${copy.process.eyebrow}</p>
+            <p class="eyebrow"><span>04</span>${copy.process.eyebrow}</p>
             <p class="section-index">DELIVERY / 01—04</p>
           </div>
           <div class="process__heading">
@@ -305,7 +368,7 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="faq" id="faq" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>04</span>${copy.faq.eyebrow}</p>
+            <p class="eyebrow"><span>05</span>${copy.faq.eyebrow}</p>
             <p class="section-index">FAQ / CLEAR ANSWERS</p>
           </div>
           <div class="faq__layout">
@@ -319,14 +382,21 @@ const createMarkup = (copy: SiteCopy): string => {
       <section class="testimonials" id="testimonials" data-scene="hidden">
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>05</span>${copy.testimonials.eyebrow}</p>
+            <p class="eyebrow"><span>06</span>${copy.testimonials.eyebrow}</p>
             <p class="section-index">CLIENT VOICES / 01—${String(copy.testimonials.items.length).padStart(2, '0')}</p>
           </div>
           <div class="testimonials__heading">
             <h2 class="display-title split-reveal">${copy.testimonials.title}</h2>
             <p class="reveal">${copy.testimonials.lead}</p>
           </div>
-          <div class="testimonials__grid">${testimonialItems}</div>
+          <div class="testimonials__slider-wrapper reveal">
+            <div class="testimonials__slider" aria-live="polite">
+              <div class="testimonials__track">${testimonialSlides}</div>
+            </div>
+            <div class="testimonials__controls">
+              <div class="testimonials__dots">${testimonialDots}</div>
+            </div>
+          </div>
           ${ctaBanner(copy.cta.testimonialsBanner, '#estimate', 'cta-banner--paper')}
         </div>
       </section>
@@ -335,7 +405,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="contact__grid" aria-hidden="true"></div>
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>06</span>${copy.contact.eyebrow}</p>
+            <p class="eyebrow"><span>07</span>${copy.contact.eyebrow}</p>
             <p class="section-index">CONTACT / START HERE</p>
           </div>
           <div class="contact__heading">
@@ -679,6 +749,161 @@ const setupFaq = (): (() => void) => {
   return () => handlers.forEach((handler, button) => button.removeEventListener('click', handler))
 }
 
+const setupTestimonialsSlider = (): (() => void) => {
+  const slider = document.querySelector<HTMLElement>('.testimonials__slider')
+  const track = document.querySelector<HTMLElement>('.testimonials__track')
+  const slides = [...document.querySelectorAll<HTMLElement>('.testimonial-slide')]
+  const dots = [...document.querySelectorAll<HTMLButtonElement>('.testimonials__dot')]
+  const wrapper = document.querySelector<HTMLElement>('.testimonials__slider-wrapper')
+
+  if (!slider || !track || slides.length === 0) return () => undefined
+
+  let currentIndex = 0
+  let timer: number | undefined
+
+  const getSlideWidth = (): number => {
+    const first = slides[0]
+    if (!first) return 340
+    const style = window.getComputedStyle(track)
+    const gap = parseFloat(style.gap) || 28
+    return first.offsetWidth + gap
+  }
+
+  const getMaxIndex = (): number => {
+    if (window.innerWidth <= 820) {
+      return slides.length - 1
+    }
+    const slideWidth = getSlideWidth()
+    if (slideWidth <= 0) return 0
+    const visibleWidth = slider.offsetWidth
+    const totalWidth = track.scrollWidth
+    const maxScroll = Math.max(0, totalWidth - visibleWidth)
+    return Math.max(0, Math.ceil(maxScroll / slideWidth))
+  }
+
+  const updateSlidePosition = (): void => {
+    const isMobile = window.innerWidth <= 820
+    const slideWidth = getSlideWidth()
+    const maxScroll = Math.max(0, track.scrollWidth - slider.offsetWidth)
+    const targetOffset = isMobile
+      ? (slides[currentIndex]?.offsetLeft ?? currentIndex * slideWidth)
+      : Math.min(currentIndex * slideWidth, maxScroll)
+    track.style.transform = `translateX(-${targetOffset}px)`
+
+    slides.forEach((slide, idx) => {
+      slide.classList.toggle('is-active', idx === currentIndex)
+    })
+
+    dots.forEach((dot, idx) => {
+      const active = idx === currentIndex
+      dot.classList.toggle('is-active', active)
+      dot.setAttribute('aria-current', String(active))
+    })
+  }
+
+  const goToSlide = (index: number): void => {
+    const max = getMaxIndex()
+    if (index > max) {
+      currentIndex = 0
+    } else if (index < 0) {
+      currentIndex = max
+    } else {
+      currentIndex = index
+    }
+    updateSlidePosition()
+  }
+
+  const startAutoplay = (): void => {
+    stopAutoplay()
+    timer = window.setInterval(() => {
+      goToSlide(currentIndex + 1)
+    }, 4200)
+  }
+
+  const stopAutoplay = (): void => {
+    if (timer) {
+      clearInterval(timer)
+      timer = undefined
+    }
+  }
+
+  dots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      goToSlide(idx)
+    })
+  })
+
+  const onMouseEnter = (): void => stopAutoplay()
+  const onMouseLeave = (): void => startAutoplay()
+  const onFocusIn = (): void => stopAutoplay()
+  const onFocusOut = (): void => startAutoplay()
+
+  wrapper?.addEventListener('mouseenter', onMouseEnter)
+  wrapper?.addEventListener('mouseleave', onMouseLeave)
+  wrapper?.addEventListener('focusin', onFocusIn)
+  wrapper?.addEventListener('focusout', onFocusOut)
+
+  let startX = 0
+  let isDragging = false
+
+  const onTouchStart = (e: TouchEvent): void => {
+    stopAutoplay()
+    startX = e.touches[0].clientX
+  }
+
+  const onTouchEnd = (e: TouchEvent): void => {
+    const diff = startX - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goToSlide(currentIndex + 1)
+      else goToSlide(currentIndex - 1)
+    }
+    window.setTimeout(startAutoplay, 2500)
+  }
+
+  slider.addEventListener('touchstart', onTouchStart, { passive: true })
+  slider.addEventListener('touchend', onTouchEnd, { passive: true })
+
+  const onPointerDown = (e: PointerEvent): void => {
+    if (e.pointerType === 'touch') return
+    startX = e.clientX
+    isDragging = true
+  }
+
+  const onPointerUp = (e: PointerEvent): void => {
+    if (!isDragging) return
+    isDragging = false
+    const diff = startX - e.clientX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToSlide(currentIndex + 1)
+      else goToSlide(currentIndex - 1)
+    }
+  }
+
+  slider.addEventListener('pointerdown', onPointerDown)
+  window.addEventListener('pointerup', onPointerUp)
+
+  const onResize = (): void => {
+    updateSlidePosition()
+  }
+  window.addEventListener('resize', onResize, { passive: true })
+
+  updateSlidePosition()
+  startAutoplay()
+
+  return () => {
+    stopAutoplay()
+    wrapper?.removeEventListener('mouseenter', onMouseEnter)
+    wrapper?.removeEventListener('mouseleave', onMouseLeave)
+    wrapper?.removeEventListener('focusin', onFocusIn)
+    wrapper?.removeEventListener('focusout', onFocusOut)
+    slider.removeEventListener('touchstart', onTouchStart)
+    slider.removeEventListener('touchend', onTouchEnd)
+    slider.removeEventListener('pointerdown', onPointerDown)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('resize', onResize)
+  }
+}
+
 const setupPointerHud = (): (() => void) => {
   const x = document.querySelector<HTMLElement>('#stage-coordinate-x')
   const y = document.querySelector<HTMLElement>('#stage-coordinate-y')
@@ -873,6 +1098,7 @@ const renderPage = (): void => {
     setupMessengerFab(),
     setupMobileCta(),
     setupFaq(),
+    setupTestimonialsSlider(),
     setupPointerHud(),
     setupAnimations(),
     setupLocale()

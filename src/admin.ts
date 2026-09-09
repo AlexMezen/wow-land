@@ -44,6 +44,7 @@ const SECTION_LABELS: Record<string, string> = {
   nav: 'Пункти меню',
   common: 'Спільні кнопки',
   hero: 'Головний екран',
+  packages: 'Пакети послуг з цінами',
   gallery: 'Галерея робіт',
   estimate: 'Калькулятор',
   process: 'Як ми працюємо',
