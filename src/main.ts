@@ -4,16 +4,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { content, loadContent, type Locale, type SiteCopy } from './content'
 import { calculateEstimate, formatArea, formatCurrency } from './estimate'
 import { initAnalytics, track } from './analytics'
-import type { InteriorSceneController } from './scene'
 
 gsap.registerPlugin(ScrollTrigger)
 ScrollTrigger.config({ ignoreMobileResize: true })
 
 const app = document.querySelector<HTMLElement>('#app')
-const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')
 const loader = document.querySelector<HTMLElement>('#loader')
 
-if (!app || !canvas) throw new Error('Application root is missing')
+if (!app) throw new Error('Application root is missing')
 
 const LEADS_ENDPOINT = '/api/leads'
 const LEADS_STORAGE_KEY = 'elitstroy-leads'
@@ -30,9 +28,6 @@ type Lead = {
 }
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-const webGLAllowed = !reducedMotion && !connection?.saveData && window.innerWidth > 820 && (!isIOS || window.innerWidth >= 1000)
 let viewportWidth = window.innerWidth
 const syncViewportHeight = (force = false): void => {
   if (!force && Math.abs(window.innerWidth - viewportWidth) < 60) return
@@ -48,7 +43,6 @@ window.addEventListener('orientationchange', () => window.setTimeout(() => {
 }, 280))
 let locale: Locale = localStorage.getItem('elitstroy-locale') === 'en' ? 'en' : 'uk'
 let siteContent: Record<Locale, SiteCopy> = content
-let sceneController: InteriorSceneController | null = null
 let cleanPage = (): void => undefined
 let loaderDismissed = false
 
@@ -58,6 +52,7 @@ const checkIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 
 const telegramIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.91 3.79 20.3 20.84c-.25 1.21-.98 1.5-2 .94l-5.5-4.07-2.66 2.57c-.3.3-.55.56-1.1.56-.72 0-.6-.27-.84-.95L6.3 13.7l-5.45-1.7c-1.18-.35-1.19-1.16.26-1.75l21.26-8.2c.97-.43 1.9.24 1.53 1.73z"/></svg>'
 const whatsappIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2a9.9 9.9 0 0 0-8.4 15.2L2 22l4.9-1.6A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 1 1-4.1 15.1l-.3-.2-2.9 1 1-2.8-.2-.3A8.1 8.1 0 0 1 12.04 3.8Zm-3.3 3.6c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.2.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3l-2-1c-.3-.1-.5-.2-.7.1l-1 1.2c-.2.2-.4.2-.6.1a8 8 0 0 1-2.4-1.5 8.8 8.8 0 0 1-1.6-2c-.2-.3 0-.5.1-.6l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.6l-.9-2c-.2-.5-.4-.4-.6-.4h-.6Z"/></svg>'
 const viberIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.5 2 2 5.9 2 10.7c0 2.6 1.3 4.9 3.4 6.5v4.3l3.9-2.1c.9.2 1.8.3 2.7.3 5.5 0 10-3.9 10-8.9S17.5 2 12 2Zm.2 2c1.9 0 3.8.6 5.2 1.9a6.7 6.7 0 0 1 2.3 5.2c0 1.9-.8 3.7-2.3 5a7.6 7.6 0 0 1-5.2 1.8l-.8-.1-2.4 1.3v-2.3l-.6-.4A6.6 6.6 0 0 1 5.3 11c0-1.9.8-3.7 2.3-5A7.6 7.6 0 0 1 12.2 4Zm-2.5 2.7c-.2 0-.5.1-.7.4-.3.3-.8.9-.8 1.9 0 1 .7 2 .8 2.2.1.2 1.4 2.3 3.5 3.1 1.7.7 2.1.6 2.5.5.5 0 1.1-.5 1.3-1 .2-.4.2-.8.1-.9l-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.3 6.3 0 0 1-1.8-1.2 6.7 6.7 0 0 1-1.2-1.6c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.2-.5l-.7-1.7c-.1-.3-.3-.3-.5-.3h-.3Z"/></svg>'
+const starIcon = '<svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="m10 1.7 2.55 5.17 5.7.83-4.12 4.02.97 5.67L10 14.71l-5.1 2.68.97-5.67L1.75 7.7l5.7-.83L10 1.7Z"/></svg>'
 
 const asset = (path: string): string => {
   if (/^(https?:)?\/\//.test(path) || path.startsWith(import.meta.env.BASE_URL)) return path
@@ -66,7 +61,7 @@ const asset = (path: string): string => {
 
 const brand = (copy: SiteCopy): string => `
   <a class="brand" href="#top" aria-label="${copy.metaTitle}">
-    <img src="${asset(copy.brand.image)}" alt="" width="42" height="42" decoding="async">
+    <img src="${asset(copy.brand.image)}" alt="" width="64" height="64" decoding="async">
     <span><b>${copy.brand.top}</b><b>${copy.brand.bottom}</b></span>
   </a>
 `
@@ -75,6 +70,21 @@ const buttonLink = (href: string, label: string, variant = 'button--primary'): s
   <a class="button ${variant}" href="${href}" data-track="${label}">
     <span>${label}</span>${arrowIcon}
   </a>
+`
+
+const ctaBanner = (
+  banner: { eyebrow: string; title: string; text?: string; button: string },
+  href: string,
+  variant = ''
+): string => `
+  <aside class="cta-banner ${variant} reveal">
+    <div class="cta-banner__copy">
+      <p class="eyebrow">${banner.eyebrow}</p>
+      <h3>${banner.title}</h3>
+      ${banner.text ? `<p>${banner.text}</p>` : ''}
+    </div>
+    ${buttonLink(href, banner.button)}
+  </aside>
 `
 
 const createMarkup = (copy: SiteCopy): string => {
@@ -89,22 +99,60 @@ const createMarkup = (copy: SiteCopy): string => {
     <button type="button" data-condition="${condition.id}" data-multiplier="${condition.multiplier}"${index === 1 ? ' class="is-active"' : ''}>${condition.name}</button>
   `).join('')
 
-  const storyWords = copy.story.title.split(' ').map((word, index) => `<span class="story-word" data-word="${index}">${word}</span>`).join(' ')
-  const valueItems = copy.value.items.map((item) => `
-    <article class="value-item">
-      <span class="value-item__index">${item.index}</span>
-      <div><h3>${item.title}</h3><p>${item.body}</p></div>
-      <div class="value-item__metric"><strong>${item.metric}</strong><span>${item.metricLabel}</span></div>
-    </article>
-  `).join('')
-  const galleryItems = copy.gallery.items.map((item) => `
+  const galleryCases = copy.gallery.items.map((item) => {
+    const renovation = copy.estimate.renovationTypes.find((entry) => entry.id === item.renovationId)
+    const condition = copy.estimate.conditions.find((entry) => entry.id === item.conditionId)
+    const packageIndex = copy.estimate.renovationTypes.findIndex((entry) => entry.id === item.renovationId)
+    const packageCopy = copy.packages.items[packageIndex]
+    const rate = renovation && condition ? renovation.pricePerSqm * condition.multiplier : 0
+    const estimate = item.area && renovation && condition ? calculateEstimate({
+      area: item.area,
+      pricePerSqm: renovation.pricePerSqm,
+      conditionMultiplier: condition.multiplier,
+      weeksPerSqm: renovation.weeksPerSqm
+    }) : null
+    const budget = estimate
+      ? `≈ ${formatCurrency(estimate.total, locale)}`
+      : `${locale === 'uk' ? 'від' : 'from'} ${formatCurrency(rate, locale)}/${copy.estimate.areaUnit}`
+    const timeline = estimate
+      ? `${estimate.weeks}–${estimate.weeks + 2} ${copy.estimate.weeksUnit}`
+      : packageCopy?.timeline ?? '—'
+    return { item, renovation, condition, rate, budget, timeline }
+  })
+  const galleryItems = galleryCases.map(({ item, renovation, budget, timeline }) => `
     <article class="gallery-card">
-      <div class="gallery-card__media"><img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"></div>
+      <button class="gallery-card__open" type="button" data-case-open="${item.index}" aria-label="${copy.gallery.openCase}: ${item.title}"></button>
+      <div class="gallery-card__media"><img src="${asset(item.image)}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"><span>${copy.gallery.openCase}${cornerIcon}</span></div>
       <div class="gallery-card__meta">
         <span>${item.index} / ${String(copy.gallery.items.length).padStart(2, '0')}</span>
         <div><p>${item.tag}</p><h3>${item.title}</h3><small>${item.location}</small></div>
       </div>
+      <dl class="gallery-card__facts">
+        <div><dt>${copy.gallery.formatLabel}</dt><dd>${renovation?.name ?? item.tag}</dd></div>
+        <div><dt>${copy.gallery.timelineLabel}</dt><dd>${timeline}</dd></div>
+        <div><dt>${copy.gallery.budgetLabel}</dt><dd>${budget}</dd></div>
+      </dl>
     </article>
+  `).join('')
+  const galleryPanels = galleryCases.map(({ item, renovation, condition, rate, budget, timeline }) => `
+    <section class="case-modal__panel" data-case-panel="${item.index}" hidden>
+      <div class="case-modal__media"><img src="${asset(item.image)}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"></div>
+      <div class="case-modal__content">
+        <p class="eyebrow">${item.index} · ${item.tag}</p>
+        <h3 id="case-title-${item.index}">${item.title}</h3>
+        <p class="case-modal__lead">${item.description}</p>
+        <dl class="case-modal__facts">
+          ${item.area ? `<div><dt>${copy.gallery.areaLabel}</dt><dd>${formatArea(item.area, locale)}</dd></div>` : ''}
+          <div><dt>${copy.gallery.formatLabel}</dt><dd>${renovation?.name ?? item.tag}</dd></div>
+          <div><dt>${copy.estimate.condition}</dt><dd>${condition?.name ?? '—'}</dd></div>
+          <div><dt>${copy.gallery.timelineLabel}</dt><dd>${timeline}</dd></div>
+          <div><dt>${item.area ? copy.gallery.budgetLabel : copy.gallery.rateLabel}</dt><dd>${item.area ? budget : `${formatCurrency(rate, locale)}/${copy.estimate.areaUnit}`}</dd></div>
+        </dl>
+        <ul>${item.details.map((detail) => `<li>${checkIcon}<span>${detail}</span></li>`).join('')}</ul>
+        <p class="case-modal__note">${copy.gallery.calculationNote}</p>
+        ${buttonLink('#estimate', copy.hero.primary)}
+      </div>
+    </section>
   `).join('')
   const faqItems = copy.faq.items.map((item, index) => `
     <article class="faq-item${index === 0 ? ' is-open' : ''}">
@@ -114,19 +162,47 @@ const createMarkup = (copy: SiteCopy): string => {
       <div class="faq-item__answer"><p>${item.answer}</p></div>
     </article>
   `).join('')
+  const messengerIcon = (type: string): string => {
+    if (type === 'Telegram') return telegramIcon
+    if (type === 'WhatsApp') return whatsappIcon
+    return viberIcon
+  }
 
-  const chapters = copy.architecture.chapters.map((chapter) => `
-    <article class="chapter" data-chapter="${chapter.index}">
-      <div class="chapter__media">
-        <img src="${chapter.image}" alt="${chapter.title}" loading="lazy" decoding="async" width="1280" height="720">
-        <span class="chapter__badge">${chapter.tag}</span>
+  const testimonialSlides = copy.testimonials.items.map((item, index) => {
+    const rating = Math.max(0, Math.min(5, Math.round(item.rating)))
+    const stars = Array.from({ length: 5 }, (_, star) => `<span class="${star < rating ? 'is-filled' : ''}">${starIcon}</span>`).join('')
+    const monogram = Array.from(item.author.trim())[0]?.toUpperCase() ?? 'E'
+    const messengerClass = `testimonial-slide__messenger--${item.messenger.toLowerCase()}`
+    const slideAria = locale === 'uk' ? `${index + 1} з ${copy.testimonials.items.length}` : `${index + 1} of ${copy.testimonials.items.length}`
+    return `
+      <div class="testimonial-slide${index === 0 ? ' is-active' : ''}" data-index="${index}" role="group" aria-roledescription="slide" aria-label="${slideAria}">
+        <article class="testimonial-card">
+          <div class="testimonial-card__header">
+            <div class="testimonial-card__author">
+              <span class="testimonial-card__avatar">${monogram}</span>
+              <div>
+                <strong>${item.author}</strong>
+                <small>${item.role}</small>
+              </div>
+            </div>
+            <div class="testimonial-card__meta">
+              <span class="testimonial-slide__messenger ${messengerClass}">
+                ${messengerIcon(item.messenger)}
+                <span>${item.messenger}</span>
+              </span>
+              <div class="testimonial-card__rating" aria-label="${rating} / 5">${stars}</div>
+            </div>
+          </div>
+          <div class="testimonial-card__screen">
+            <img src="${asset(item.image)}" alt="${item.author} - ${item.messenger}" loading="lazy" decoding="async" width="480" height="850">
+          </div>
+        </article>
       </div>
-      <div class="chapter__line"><span>${chapter.index}</span><i></i></div>
-      <p class="eyebrow">${chapter.eyebrow}</p>
-      <h3>${chapter.title}</h3>
-      <p class="chapter__body">${chapter.body}</p>
-      <div class="chapter__metric"><strong>${chapter.metric}</strong><span>${chapter.metricLabel}</span></div>
-    </article>
+    `
+  }).join('')
+
+  const testimonialDots = copy.testimonials.items.map((_, index) => `
+    <button class="testimonials__dot${index === 0 ? ' is-active' : ''}" data-slide-to="${index}" type="button" aria-label="${locale === 'uk' ? `Перейти до відгуку ${index + 1}` : `Go to review ${index + 1}`}"></button>
   `).join('')
 
   const processSteps = copy.process.steps.map((step) => `
@@ -151,8 +227,6 @@ const createMarkup = (copy: SiteCopy): string => {
       <div class="site-header__inner">
         ${brand(copy)}
         <nav class="desktop-nav" aria-label="${locale === 'uk' ? 'Головна навігація' : 'Main navigation'}">
-          <a href="#story">${copy.nav.story}</a>
-          <a href="#architecture">${copy.nav.architecture}</a>
           <a href="#estimate">${copy.nav.estimate}</a>
           <a href="#process">${copy.nav.process}</a>
         </nav>
@@ -168,11 +242,9 @@ const createMarkup = (copy: SiteCopy): string => {
       </div>
       <div class="mobile-menu" aria-hidden="true">
         <nav>
-          <a href="#story"><span>01</span>${copy.nav.story}</a>
-          <a href="#architecture"><span>02</span>${copy.nav.architecture}</a>
-          <a href="#estimate"><span>03</span>${copy.nav.estimate}</a>
-          <a href="#process"><span>04</span>${copy.nav.process}</a>
-          <a href="#contact"><span>05</span>${copy.nav.contact}</a>
+          <a href="#estimate"><span>01</span>${copy.nav.estimate}</a>
+          <a href="#process"><span>02</span>${copy.nav.process}</a>
+          <a href="#contact"><span>03</span>${copy.nav.contact}</a>
         </nav>
         <p>Kharkiv · Ukraine · 49.9935° N</p>
       </div>
@@ -210,136 +282,10 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="scene-index"><span>CGI · 001</span><span>49.9935° N · 36.2304° E</span></div>
       </section>
 
-      <section class="story" id="story" data-scene="hidden">
-        <div class="container">
-          <div class="section-head reveal">
-            <p class="eyebrow"><span>01</span>${copy.story.eyebrow}</p>
-            <p class="section-index">APPROACH / PLAN—RESULT</p>
-          </div>
-        </div>
-        <div class="story__formation">
-          <div class="story__formation-bg" aria-hidden="true">
-            <img src="${asset(copy.story.formationImage)}" alt="" loading="lazy" decoding="async" width="1280" height="720">
-          </div>
-          <div class="story__sticky">
-            <div class="story__shape" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div>
-            <div class="container story__formation-copy">
-              <p class="story__counter">00 / <span>03</span></p>
-              <h2 class="story__forming-title">${storyWords}</h2>
-              <div class="story__forming-bottom">
-                <p class="story__forming-lead">${copy.story.lead}</p>
-                <blockquote><span>“</span>${copy.story.quote}</blockquote>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="container">
-          <div class="story__cards-head reveal"><p>THREE LAYERS / ONE RESULT</p><span>01—03</span></div>
-          <div class="story__cards">
-            ${copy.story.cards.map((card) => `
-              <article class="story-card reveal">
-                <div class="story-card__media">
-                  <img src="${card.image}" alt="${card.title}" loading="lazy" decoding="async" width="800" height="600">
-                  <div class="story-card__badge"><span>${card.tag}</span></div>
-                </div>
-                <div class="story-card__content">
-                  <span class="story-card__number">${card.number}</span>
-                  <h3>${card.title}</h3>
-                  <p>${card.body}</p>
-                </div>
-              </article>
-            `).join('')}
-          </div>
-        </div>
-      </section>
-
-      <section class="value-system" id="value-system" data-scene="hidden">
-        <div class="value-system__marquee" aria-hidden="true"><span>${copy.value.marquee}</span><span>${copy.value.marquee}</span></div>
-        <div class="container">
-          <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>02</span>${copy.value.eyebrow}</p>
-            <p class="section-index">SYSTEM / INTEGRATED</p>
-          </div>
-          <div class="value-system__heading">
-            <h2 class="display-title split-reveal">${copy.value.title}</h2>
-            <p class="reveal">${copy.value.lead}</p>
-          </div>
-          <div class="value-system__items">${valueItems}</div>
-        </div>
-      </section>
-
-      <section class="architecture scene-section" id="architecture" data-scene="architecture">
-        <div class="container architecture__intro reveal">
-          <div class="section-head section-head--dark">
-            <p class="eyebrow"><span>03</span>${copy.architecture.eyebrow}</p>
-            <p class="section-index">PRODUCT / CGI—EXPLODED</p>
-          </div>
-          <div class="architecture__intro-grid">
-            <h2 class="display-title">${copy.architecture.title}</h2>
-            <p>${copy.architecture.intro}</p>
-          </div>
-        </div>
-        <div class="architecture__story">
-          <div class="architecture__stage" id="architecture-stage">
-            <div class="architecture__side-photo architecture__side-photo--left">
-              ${copy.architecture.chapters.map((chapter, index) => `<figure class="${index === 0 ? 'is-active' : ''}" data-side-photo="${index}"><img src="${chapter.image}" alt="" loading="lazy" decoding="async" width="480" height="640"><figcaption>${chapter.index} / ${chapter.eyebrow}</figcaption></figure>`).join('')}
-            </div>
-            <div class="architecture__side-photo architecture__side-photo--right">
-              ${copy.architecture.chapters.map((chapter, index) => `<figure class="${index === 1 ? 'is-active' : ''}" data-side-photo="${index}"><img src="${chapter.image}" alt="" loading="lazy" decoding="async" width="480" height="640"><figcaption>${chapter.tag}</figcaption></figure>`).join('')}
-            </div>
-            <div class="stage-frame">
-              <div class="stage-hud">
-                <div class="stage-hud__item">
-                  <span>MODEL</span>
-                  <b>CONCEPT 01 / STUDIO—FLAT</b>
-                </div>
-                <div class="stage-hud__item">
-                  <span>ACTIVE LAYER</span>
-                  <b id="stage-layer-name" class="stage-hud__accent">${copy.architecture.chapters[0].tag}</b>
-                </div>
-                <div class="stage-hud__item stage-hud__item--right">
-                  <span>RENDER MODE</span>
-                  <b class="live-dot">REALTIME WEBGL</b>
-                </div>
-              </div>
-              <div class="stage-photos" id="stage-photos">
-                ${copy.architecture.chapters.map((chapter, index) => `
-                  <div class="stage-photo${index === 0 ? ' is-active' : ''}" data-layer="${chapter.index}">
-                    <img src="${chapter.image}" alt="${chapter.title}" decoding="async" width="1280" height="720">
-                    <div class="stage-photo__glass">
-                      <span class="stage-photo__num">${chapter.index}</span>
-                      <div>
-                        <strong>${chapter.eyebrow} · ${chapter.title}</strong>
-                        <small>${chapter.metric} ${chapter.metricLabel}</small>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-                <div class="stage-webgl-overlay" aria-hidden="true">
-                  <div class="stage-reticle"><i></i><i></i><span></span></div>
-                  <p>MOVE CURSOR / ORBIT VIEW</p>
-                  <span>X <b id="stage-coordinate-x">0.00</b> · Y <b id="stage-coordinate-y">0.00</b></span>
-                </div>
-              </div>
-              <div class="stage-timeline">
-                ${copy.architecture.chapters.map((chapter, index) => `
-                  <div class="stage-timeline__step${index === 0 ? ' is-active' : ''}" data-step="${chapter.index}">
-                    <span>${chapter.index}</span>
-                    <i></i>
-                    <small>${chapter.eyebrow}</small>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-          <div class="architecture__chapters">${chapters}</div>
-        </div>
-      </section>
-
       <section class="gallery" id="gallery" data-scene="hidden">
         <div class="container gallery__heading">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>04</span>${copy.gallery.eyebrow}</p>
+            <p class="eyebrow"><span>01</span>${copy.gallery.eyebrow}</p>
             <p class="section-index">COLLECTION / 01—06</p>
           </div>
           <div class="gallery__intro">
@@ -353,10 +299,55 @@ const createMarkup = (copy: SiteCopy): string => {
         </div>
       </section>
 
+      <div class="case-modal" id="case-modal" hidden aria-hidden="true">
+        <button class="case-modal__backdrop" type="button" data-case-close aria-label="${copy.gallery.closeCase}"></button>
+        <div class="case-modal__dialog" role="dialog" aria-modal="true" tabindex="-1">
+          <button class="case-modal__close" type="button" data-case-close>${copy.gallery.closeCase}<span aria-hidden="true">×</span></button>
+          ${galleryPanels}
+        </div>
+      </div>
+
+      <div class="container">
+        ${ctaBanner(copy.cta.galleryBanner, '#contact', 'cta-banner--gold cta-banner--compact')}
+      </div>
+
+      <section class="packages" id="packages" data-scene="hidden">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="eyebrow"><span>02</span>${copy.packages.eyebrow}</p>
+            <p class="section-index">PACKAGES / FIXED PRICE</p>
+          </div>
+          <div class="packages__heading">
+            <h2 class="display-title split-reveal">${copy.packages.title}</h2>
+            <p class="reveal">${copy.packages.intro}</p>
+          </div>
+          <div class="packages__grid">
+            ${copy.packages.items.map((pkg, index) => `
+              <article class="package-card${index === 1 ? ' package-card--featured' : ''} reveal">
+                <div class="package-card__head">
+                  <span class="package-card__badge">${pkg.badge}</span>
+                  <h3>${pkg.name}</h3>
+                </div>
+                <div class="package-card__price">
+                  <strong>${pkg.pricePerSqm}</strong>
+                  <span>${pkg.timeline}</span>
+                  <small>${pkg.guarantee}</small>
+                </div>
+                <p class="package-card__desc">${pkg.description}</p>
+                <ul class="package-card__features">
+                  ${pkg.features.map((feature) => `<li>${feature}</li>`).join('')}
+                </ul>
+                ${buttonLink('#estimate', pkg.cta, index === 1 ? '' : 'button--ghost')}
+              </article>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+
       <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>05</span>${copy.estimate.eyebrow}</p>
+            <p class="eyebrow"><span>03</span>${copy.estimate.eyebrow}</p>
             <p class="section-index">ESTIMATE / COST—SIMULATION</p>
           </div>
           <div class="investment__heading">
@@ -393,47 +384,23 @@ const createMarkup = (copy: SiteCopy): string => {
             </div>
           </div>
           <p class="calculator-disclaimer reveal"><span>i</span>${copy.estimate.disclaimer}</p>
-        </div>
-      </section>
-
-      <section class="assurance" id="assurance" data-scene="hidden">
-        <div class="container">
-          <div class="section-head reveal">
-            <p class="eyebrow"><span>06</span>${copy.assurance.eyebrow}</p>
-            <p class="section-index">CONTROL ROUTE / 01—04</p>
-          </div>
-          <div class="assurance__heading">
-            <h2 class="display-title split-reveal">${copy.assurance.title}</h2>
-            <p class="reveal">${copy.assurance.lead}</p>
-          </div>
-          <div class="assurance__journey">
-            <div class="assurance__stage">
-              <div class="assurance-orbit" aria-hidden="true">
-                <i></i><i></i><i></i><i></i>
-                <div><span>ACTIVE STAGE</span><strong id="assurance-active-number">01</strong><small>CONTROL CYCLE</small></div>
-                <b id="assurance-orbit-dot"></b>
-              </div>
-              <div class="assurance__stage-meta"><span>CI / ROUTE MAP</span><b><i></i>LIVE CONTROL</b></div>
-              <div class="assurance__stage-progress"><span id="assurance-progress"></span></div>
+          <aside class="estimate-next reveal">
+            <div class="estimate-next__copy">
+              <p class="eyebrow">${copy.cta.estimateBanner.eyebrow}</p>
+              <h3>${copy.cta.estimateBanner.title}</h3>
+              <p>${copy.cta.estimateBanner.text}</p>
+              <div class="estimate-next__value"><span>${copy.estimate.nextStepEstimateLabel}</span><strong id="next-step-result">$31,200</strong></div>
+              ${buttonLink('#contact', copy.cta.estimateBanner.button)}
             </div>
-            <div class="assurance__steps">
-              ${copy.assurance.metrics.map((metric, index) => `
-                <article class="assurance-step${index === 0 ? ' is-active' : ''}" data-assurance-step="${metric.value}">
-                  <div class="assurance-step__top"><span>${metric.value}</span><small>${index === copy.assurance.metrics.length - 1 ? 'RESULT' : 'CHECKPOINT'}</small></div>
-                  <h3>${metric.label}</h3>
-                  <p>${metric.detail}</p>
-                  <div class="assurance-step__status"><i></i><span>${index === 0 ? 'BUDGET' : index === 1 ? 'SCHEDULE' : index === 2 ? 'QUALITY' : 'WARRANTY'}</span><b>${String((index + 1) * 25).padStart(2, '0')}%</b></div>
-                </article>
-              `).join('')}
-            </div>
-          </div>
+            <div class="estimate-next__media"><img src="${asset(copy.estimate.nextStepImage)}" alt="${copy.estimate.nextStepImageAlt}" loading="lazy" decoding="async" width="1280" height="860"></div>
+          </aside>
         </div>
       </section>
 
       <section class="process" id="process" data-scene="hidden">
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>07</span>${copy.process.eyebrow}</p>
+            <p class="eyebrow"><span>04</span>${copy.process.eyebrow}</p>
             <p class="section-index">DELIVERY / 01—04</p>
           </div>
           <div class="process__heading">
@@ -457,19 +424,43 @@ const createMarkup = (copy: SiteCopy): string => {
               <ul>${copy.process.trustItems.map((item) => `<li>${checkIcon}<span>${item}</span></li>`).join('')}</ul>
             </div>
           </div>
+          ${ctaBanner(copy.cta.processBanner, '#contact')}
         </div>
       </section>
 
       <section class="faq" id="faq" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>08</span>${copy.faq.eyebrow}</p>
+            <p class="eyebrow"><span>05</span>${copy.faq.eyebrow}</p>
             <p class="section-index">FAQ / CLEAR ANSWERS</p>
           </div>
           <div class="faq__layout">
             <div class="faq__heading"><h2 class="display-title split-reveal">${copy.faq.title}</h2><p class="reveal">${copy.faq.lead}</p></div>
             <div class="faq__items">${faqItems}</div>
           </div>
+          ${ctaBanner(copy.cta.faqBanner, '#contact', 'cta-banner--compact')}
+        </div>
+      </section>
+
+      <section class="testimonials" id="testimonials" data-scene="hidden">
+        <div class="container">
+          <div class="section-head section-head--dark reveal">
+            <p class="eyebrow"><span>06</span>${copy.testimonials.eyebrow}</p>
+            <p class="section-index">CLIENT VOICES / 01—${String(copy.testimonials.items.length).padStart(2, '0')}</p>
+          </div>
+          <div class="testimonials__heading">
+            <h2 class="display-title split-reveal">${copy.testimonials.title}</h2>
+            <p class="reveal">${copy.testimonials.lead}</p>
+          </div>
+          <div class="testimonials__slider-wrapper reveal">
+            <div class="testimonials__slider" aria-live="polite">
+              <div class="testimonials__track">${testimonialSlides}</div>
+            </div>
+            <div class="testimonials__controls">
+              <div class="testimonials__dots">${testimonialDots}</div>
+            </div>
+          </div>
+          ${ctaBanner(copy.cta.testimonialsBanner, '#estimate', 'cta-banner--paper')}
         </div>
       </section>
 
@@ -477,7 +468,7 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="contact__grid" aria-hidden="true"></div>
         <div class="container">
           <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>09</span>${copy.contact.eyebrow}</p>
+            <p class="eyebrow"><span>07</span>${copy.contact.eyebrow}</p>
             <p class="section-index">CONTACT / START HERE</p>
           </div>
           <div class="contact__heading">
@@ -547,10 +538,20 @@ const createMarkup = (copy: SiteCopy): string => {
 
     <footer class="site-footer">
       <div class="container">
-        <div class="footer__top">${brand(copy)}<p>${copy.footer.line}</p><a href="#top" aria-label="Back to top">↑</a></div>
+        <div class="footer__top">
+          ${brand(copy)}
+          <p>${copy.footer.line}</p>
+          ${buttonLink('#contact', copy.footer.ctaButton)}
+          <a href="#top" aria-label="Back to top">↑</a>
+        </div>
         <div class="footer__bottom"><span>© ${copy.footer.rights}</span><span>${copy.footer.privacy}</span><span>KH · UA</span></div>
       </div>
     </footer>
+
+    <nav class="mobile-cta-bar" aria-label="${locale === 'uk' ? 'Швидкі дії' : 'Quick actions'}">
+      <a class="mobile-cta-bar__calculate" href="#estimate" data-track="mobile-${copy.cta.mobileBar.calculate}"><span>${copy.cta.mobileBar.calculate}</span>${arrowIcon}</a>
+      <a class="mobile-cta-bar__write" href="#contact" data-track="mobile-${copy.cta.mobileBar.write}"><span>${copy.cta.mobileBar.write}</span>${arrowIcon}</a>
+    </nav>
 
     <div class="messenger-fab" aria-label="Messengers">
       <a class="messenger-fab__btn" href="${copy.contact.telegram}" target="_blank" rel="noopener" data-fab-messenger="Telegram" aria-label="Telegram">${telegramIcon}</a>
@@ -566,6 +567,71 @@ const select = <T extends Element>(selector: string, root: ParentNode = document
   return element
 }
 
+const setupGalleryCases = (): (() => void) => {
+  const modal = select<HTMLElement>('#case-modal')
+  const dialog = select<HTMLElement>('.case-modal__dialog', modal)
+  const openButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-case-open]')]
+  const closeButtons = [...modal.querySelectorAll<HTMLButtonElement>('[data-case-close]')]
+  const panels = [...modal.querySelectorAll<HTMLElement>('[data-case-panel]')]
+  let previousFocus: HTMLElement | null = null
+
+  const close = (): void => {
+    if (modal.hidden) return
+    modal.hidden = true
+    modal.setAttribute('aria-hidden', 'true')
+    document.body.classList.remove('case-open')
+    panels.forEach((panel) => { panel.hidden = true })
+    previousFocus?.focus()
+  }
+
+  const open = (index: string, trigger: HTMLElement): void => {
+    const panel = panels.find((entry) => entry.dataset.casePanel === index)
+    if (!panel) return
+    previousFocus = trigger
+    panels.forEach((entry) => { entry.hidden = entry !== panel })
+    dialog.setAttribute('aria-labelledby', `case-title-${index}`)
+    modal.hidden = false
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.classList.add('case-open')
+    dialog.focus()
+    track('case_open', { case: index })
+  }
+
+  const openHandlers = new Map<HTMLButtonElement, () => void>()
+  openButtons.forEach((button) => {
+    const handler = (): void => open(button.dataset.caseOpen ?? '', button)
+    openHandlers.set(button, handler)
+    button.addEventListener('click', handler)
+  })
+  closeButtons.forEach((button) => button.addEventListener('click', close))
+  const modalCtas = [...modal.querySelectorAll<HTMLAnchorElement>('.button')]
+  modalCtas.forEach((link) => link.addEventListener('click', close))
+  const onKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') close()
+    if (event.key !== 'Tab' || modal.hidden) return
+    const focusable = [...dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((element) => !element.closest<HTMLElement>('[hidden]'))
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (!first || !last) return
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+  window.addEventListener('keydown', onKeydown)
+
+  return () => {
+    openHandlers.forEach((handler, button) => button.removeEventListener('click', handler))
+    closeButtons.forEach((button) => button.removeEventListener('click', close))
+    modalCtas.forEach((link) => link.removeEventListener('click', close))
+    window.removeEventListener('keydown', onKeydown)
+    document.body.classList.remove('case-open')
+  }
+}
+
 const setupCalculator = (): (() => void) => {
   const area = select<HTMLInputElement>('#area')
   const areaDisplay = select<HTMLOutputElement>('#area-display')
@@ -573,6 +639,7 @@ const setupCalculator = (): (() => void) => {
   const areaResult = select<HTMLElement>('#area-result')
   const perSqmResult = select<HTMLElement>('#per-sqm-result')
   const weeksResult = select<HTMLElement>('#weeks-result')
+  const nextStepResult = select<HTMLElement>('#next-step-result')
   const orbitContext = select<HTMLElement>('#orbit-context')
   const orbit = select<HTMLElement>('#roi-orbit')
   const conditionButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-condition]')]
@@ -593,6 +660,7 @@ const setupCalculator = (): (() => void) => {
     area.style.setProperty('--range-progress', `${rangeProgress}%`)
     areaDisplay.value = formatArea(areaValue, locale)
     totalResult.textContent = formatCurrency(estimate.total, locale)
+    nextStepResult.textContent = formatCurrency(estimate.total, locale)
     areaResult.textContent = formatArea(areaValue, locale)
     perSqmResult.textContent = formatCurrency(estimate.perSqm, locale)
     weeksResult.textContent = `${estimate.weeks}–${estimate.weeks + 2} ${siteContent[locale].estimate.weeksUnit}`
@@ -741,6 +809,56 @@ const setupMessengerFab = (): (() => void) => {
   return () => handlers.forEach((handler, link) => link.removeEventListener('click', handler))
 }
 
+const setupMobileCta = (): (() => void) => {
+  const hero = select<HTMLElement>('.hero')
+  const contact = select<HTMLElement>('.contact')
+  let pastHero = false
+  let reachedContact = false
+
+  const update = (): void => {
+    document.body.classList.toggle('has-cta-bar', pastHero && !reachedContact)
+  }
+  const sync = (): void => {
+    pastHero = hero.getBoundingClientRect().bottom <= 0
+    reachedContact = contact.getBoundingClientRect().top <= window.innerHeight * 0.9
+    update()
+  }
+  const heroTrigger = ScrollTrigger.create({
+    trigger: hero,
+    start: 'bottom top',
+    end: 'max',
+    onEnter: () => {
+      pastHero = true
+      update()
+    },
+    onLeaveBack: () => {
+      pastHero = false
+      update()
+    }
+  })
+  const contactTrigger = ScrollTrigger.create({
+    trigger: contact,
+    start: 'top 90%',
+    end: 'max',
+    onEnter: () => {
+      reachedContact = true
+      update()
+    },
+    onLeaveBack: () => {
+      reachedContact = false
+      update()
+    }
+  })
+  const frame = requestAnimationFrame(sync)
+
+  return () => {
+    cancelAnimationFrame(frame)
+    heroTrigger.kill()
+    contactTrigger.kill()
+    document.body.classList.remove('has-cta-bar')
+  }
+}
+
 const setupFaq = (): (() => void) => {
   const items = [...document.querySelectorAll<HTMLElement>('.faq-item')]
   const handlers = new Map<HTMLButtonElement, () => void>()
@@ -759,6 +877,161 @@ const setupFaq = (): (() => void) => {
     button.addEventListener('click', handler)
   })
   return () => handlers.forEach((handler, button) => button.removeEventListener('click', handler))
+}
+
+const setupTestimonialsSlider = (): (() => void) => {
+  const slider = document.querySelector<HTMLElement>('.testimonials__slider')
+  const track = document.querySelector<HTMLElement>('.testimonials__track')
+  const slides = [...document.querySelectorAll<HTMLElement>('.testimonial-slide')]
+  const dots = [...document.querySelectorAll<HTMLButtonElement>('.testimonials__dot')]
+  const wrapper = document.querySelector<HTMLElement>('.testimonials__slider-wrapper')
+
+  if (!slider || !track || slides.length === 0) return () => undefined
+
+  let currentIndex = 0
+  let timer: number | undefined
+
+  const getSlideWidth = (): number => {
+    const first = slides[0]
+    if (!first) return 340
+    const style = window.getComputedStyle(track)
+    const gap = parseFloat(style.gap) || 28
+    return first.offsetWidth + gap
+  }
+
+  const getMaxIndex = (): number => {
+    if (window.innerWidth <= 820) {
+      return slides.length - 1
+    }
+    const slideWidth = getSlideWidth()
+    if (slideWidth <= 0) return 0
+    const visibleWidth = slider.offsetWidth
+    const totalWidth = track.scrollWidth
+    const maxScroll = Math.max(0, totalWidth - visibleWidth)
+    return Math.max(0, Math.ceil(maxScroll / slideWidth))
+  }
+
+  const updateSlidePosition = (): void => {
+    const isMobile = window.innerWidth <= 820
+    const slideWidth = getSlideWidth()
+    const maxScroll = Math.max(0, track.scrollWidth - slider.offsetWidth)
+    const targetOffset = isMobile
+      ? (slides[currentIndex]?.offsetLeft ?? currentIndex * slideWidth)
+      : Math.min(currentIndex * slideWidth, maxScroll)
+    track.style.transform = `translateX(-${targetOffset}px)`
+
+    slides.forEach((slide, idx) => {
+      slide.classList.toggle('is-active', idx === currentIndex)
+    })
+
+    dots.forEach((dot, idx) => {
+      const active = idx === currentIndex
+      dot.classList.toggle('is-active', active)
+      dot.setAttribute('aria-current', String(active))
+    })
+  }
+
+  const goToSlide = (index: number): void => {
+    const max = getMaxIndex()
+    if (index > max) {
+      currentIndex = 0
+    } else if (index < 0) {
+      currentIndex = max
+    } else {
+      currentIndex = index
+    }
+    updateSlidePosition()
+  }
+
+  const startAutoplay = (): void => {
+    stopAutoplay()
+    timer = window.setInterval(() => {
+      goToSlide(currentIndex + 1)
+    }, 4200)
+  }
+
+  const stopAutoplay = (): void => {
+    if (timer) {
+      clearInterval(timer)
+      timer = undefined
+    }
+  }
+
+  dots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      goToSlide(idx)
+    })
+  })
+
+  const onMouseEnter = (): void => stopAutoplay()
+  const onMouseLeave = (): void => startAutoplay()
+  const onFocusIn = (): void => stopAutoplay()
+  const onFocusOut = (): void => startAutoplay()
+
+  wrapper?.addEventListener('mouseenter', onMouseEnter)
+  wrapper?.addEventListener('mouseleave', onMouseLeave)
+  wrapper?.addEventListener('focusin', onFocusIn)
+  wrapper?.addEventListener('focusout', onFocusOut)
+
+  let startX = 0
+  let isDragging = false
+
+  const onTouchStart = (e: TouchEvent): void => {
+    stopAutoplay()
+    startX = e.touches[0].clientX
+  }
+
+  const onTouchEnd = (e: TouchEvent): void => {
+    const diff = startX - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goToSlide(currentIndex + 1)
+      else goToSlide(currentIndex - 1)
+    }
+    window.setTimeout(startAutoplay, 2500)
+  }
+
+  slider.addEventListener('touchstart', onTouchStart, { passive: true })
+  slider.addEventListener('touchend', onTouchEnd, { passive: true })
+
+  const onPointerDown = (e: PointerEvent): void => {
+    if (e.pointerType === 'touch') return
+    startX = e.clientX
+    isDragging = true
+  }
+
+  const onPointerUp = (e: PointerEvent): void => {
+    if (!isDragging) return
+    isDragging = false
+    const diff = startX - e.clientX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToSlide(currentIndex + 1)
+      else goToSlide(currentIndex - 1)
+    }
+  }
+
+  slider.addEventListener('pointerdown', onPointerDown)
+  window.addEventListener('pointerup', onPointerUp)
+
+  const onResize = (): void => {
+    updateSlidePosition()
+  }
+  window.addEventListener('resize', onResize, { passive: true })
+
+  updateSlidePosition()
+  startAutoplay()
+
+  return () => {
+    stopAutoplay()
+    wrapper?.removeEventListener('mouseenter', onMouseEnter)
+    wrapper?.removeEventListener('mouseleave', onMouseLeave)
+    wrapper?.removeEventListener('focusin', onFocusIn)
+    wrapper?.removeEventListener('focusout', onFocusOut)
+    slider.removeEventListener('touchstart', onTouchStart)
+    slider.removeEventListener('touchend', onTouchEnd)
+    slider.removeEventListener('pointerdown', onPointerDown)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('resize', onResize)
+  }
 }
 
 const setupPointerHud = (): (() => void) => {
@@ -826,107 +1099,11 @@ const setupNavigation = (): (() => void) => {
 
 const setupAnimations = (): (() => void) => {
   const progress = select<HTMLElement>('.site-progress span')
-  const chapters = [...document.querySelectorAll<HTMLElement>('.chapter')]
   const context = gsap.context(() => {
     ScrollTrigger.create({
       start: 0,
       end: 'max',
       onUpdate: (self) => gsap.set(progress, { scaleX: self.progress })
-    })
-
-    const storyWords = gsap.utils.toArray<HTMLElement>('.story-word')
-    const storyCounter = document.querySelector<HTMLElement>('.story__counter span')
-    const isMobileViewport = window.innerWidth <= 820
-    if (!reducedMotion && storyWords.length > 0 && !isMobileViewport) {
-      gsap.set(storyWords, { opacity: 0.08, yPercent: 65, rotateX: -70, filter: 'blur(12px)', transformOrigin: '50% 100%' })
-      gsap.set(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 35 })
-      const storyTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.story__formation',
-          start: 'top 68%',
-          once: true
-        }
-      })
-      storyTimeline.eventCallback('onUpdate', () => {
-        if (storyCounter) storyCounter.textContent = String(Math.max(1, Math.ceil(storyTimeline.progress() * 3))).padStart(2, '0')
-      })
-      storyTimeline.to(storyWords, { opacity: 1, yPercent: 0, rotateX: 0, filter: 'blur(0px)', duration: 1.1, stagger: 0.05, ease: 'power2.out' }, 0)
-      storyTimeline.fromTo('.story__shape i', { scale: 0.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, stagger: 0.06, ease: 'power2.out' }, 0.1)
-      storyTimeline.fromTo('.story__shape span', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' }, 0.7)
-      storyTimeline.to(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.8)
-      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
-        yPercent: 9,
-        scale: 1.02,
-        ease: 'none',
-        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
-      })
-    } else if (!reducedMotion && storyWords.length > 0) {
-      gsap.fromTo('.story__forming-title', { opacity: 0, y: 34 }, {
-        opacity: 1,
-        y: 0,
-        duration: 0.9,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: '.story__formation', start: 'top 72%', once: true }
-      })
-      gsap.fromTo(['.story__forming-lead', '.story__forming-bottom blockquote'], { opacity: 0, y: 26 }, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        stagger: 0.08,
-        scrollTrigger: { trigger: '.story__formation', start: 'top 62%', once: true }
-      })
-      gsap.fromTo('.story__formation-bg img', { yPercent: -9, scale: 1.14 }, {
-        yPercent: 9,
-        scale: 1.02,
-        ease: 'none',
-        scrollTrigger: { trigger: '.story__formation', start: 'top bottom', end: 'bottom top', scrub: 0.8 }
-      })
-    }
-
-    ScrollTrigger.create({
-      trigger: '.architecture',
-      start: 'top 42%',
-      end: 'bottom bottom',
-      onEnter: () => sceneController?.setMode('architecture'),
-      onEnterBack: () => sceneController?.setMode('architecture'),
-      onLeave: () => sceneController?.setMode('hidden'),
-      onLeaveBack: () => sceneController?.setMode('hidden'),
-      onUpdate: (self) => sceneController?.setArchitectureProgress(self.progress)
-    })
-
-    const stagePhotos = [...document.querySelectorAll<HTMLElement>('.stage-photo')]
-    const stageSteps = [...document.querySelectorAll<HTMLElement>('.stage-timeline__step')]
-    const sidePhotosLeft = [...document.querySelectorAll<HTMLElement>('.architecture__side-photo--left figure')]
-    const sidePhotosRight = [...document.querySelectorAll<HTMLElement>('.architecture__side-photo--right figure')]
-    const stageLayerName = document.querySelector<HTMLElement>('#stage-layer-name')
-
-    const setStageIndex = (idx: number): void => {
-      stagePhotos.forEach((photo, i) => {
-        photo.classList.toggle('is-active', i === idx)
-      })
-      stageSteps.forEach((step, i) => {
-        step.classList.toggle('is-active', i === idx)
-      })
-      sidePhotosLeft.forEach((photo, i) => photo.classList.toggle('is-active', i === idx))
-      sidePhotosRight.forEach((photo, i) => photo.classList.toggle('is-active', i === (idx + 1) % sidePhotosRight.length))
-      if (stageLayerName && siteContent[locale].architecture.chapters[idx]) {
-        stageLayerName.textContent = siteContent[locale].architecture.chapters[idx].tag
-      }
-    }
-
-    chapters.forEach((chapter, index) => {
-      ScrollTrigger.create({
-        trigger: chapter,
-        start: 'top 62%',
-        end: 'bottom 38%',
-        onToggle: (self) => {
-          chapter.classList.toggle('is-active', self.isActive)
-          if (self.isActive) {
-            setStageIndex(index)
-            sceneController?.setArchitectureProgress(index / Math.max(chapters.length - 1, 1))
-          }
-        }
-      })
     })
 
     const galleryTrack = document.querySelector<HTMLElement>('.gallery__track')
@@ -953,76 +1130,22 @@ const setupAnimations = (): (() => void) => {
       })
     }
 
-    const assuranceSteps = [...document.querySelectorAll<HTMLElement>('.assurance-step')]
-    const assuranceNumber = document.querySelector<HTMLElement>('#assurance-active-number')
-    const assuranceProgress = document.querySelector<HTMLElement>('#assurance-progress')
-    const assuranceOrbit = document.querySelector<HTMLElement>('.assurance-orbit')
-    assuranceSteps.forEach((step, index) => {
-      const mobile = window.innerWidth <= 820
-      ScrollTrigger.create({
-        trigger: step,
-        start: mobile ? 'top 76%' : 'top 62%',
-        end: 'bottom 38%',
-        onToggle: (self) => {
-          if (!self.isActive) return
-          assuranceSteps.forEach((item) => item.classList.toggle('is-active', item === step))
-          if (assuranceNumber) assuranceNumber.textContent = String(index + 1).padStart(2, '0')
-          assuranceProgress?.style.setProperty('width', `${((index + 1) / assuranceSteps.length) * 100}%`)
-          assuranceOrbit?.style.setProperty('--assurance-angle', `${index * 90 + 35}deg`)
-        }
-      })
-      if (!reducedMotion) {
-        const mobile = window.innerWidth <= 820
-        gsap.fromTo(step, { xPercent: mobile ? 0 : index % 2 === 0 ? 12 : -8, opacity: 0.18 }, {
-          xPercent: 0,
-          opacity: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: step, start: mobile ? 'top 96%' : 'top 92%', end: mobile ? 'top 68%' : 'top 52%', scrub: 0.7 }
-        })
-      }
-    })
-
     if (!reducedMotion) {
-      gsap.utils.toArray<HTMLElement>('.story-card').forEach((card, index) => {
-        const media = card.querySelector<HTMLElement>('.story-card__media')
-        if (media) {
-          gsap.fromTo(media, { clipPath: 'inset(100% 0 0 0)', y: 70 }, {
-            clipPath: 'inset(0% 0 0 0)',
-            y: 0,
-            duration: 1.1,
-            delay: index * 0.06,
-            ease: 'power3.out',
-            scrollTrigger: { trigger: card, start: 'top 86%', once: true }
-          })
-        }
-      })
-      gsap.utils.toArray<HTMLElement>('.value-item').forEach((item) => {
-        gsap.fromTo(item, { opacity: 0.22, xPercent: 6 }, {
-          opacity: 1,
-          xPercent: 0,
-          ease: 'none',
-          scrollTrigger: { trigger: item, start: 'top 82%', end: 'top 48%', scrub: 0.5 }
-        })
-      })
-      gsap.to('.value-system__marquee', {
-        xPercent: -18,
-        ease: 'none',
-        scrollTrigger: { trigger: '.value-system', start: 'top bottom', end: 'bottom top', scrub: 1 }
-      })
+      const mobile = window.innerWidth <= 820
       gsap.utils.toArray<HTMLElement>('.reveal').forEach((element) => {
-        gsap.fromTo(element, { y: 44, opacity: 0 }, {
+        gsap.fromTo(element, { y: mobile ? 18 : 44, opacity: 0 }, {
           y: 0,
           opacity: 1,
-          duration: 0.9,
+          duration: mobile ? 0.45 : 0.9,
           ease: 'power3.out',
           scrollTrigger: { trigger: element, start: 'top 88%', once: true }
         })
       })
       gsap.utils.toArray<HTMLElement>('.split-reveal').forEach((element) => {
-        gsap.fromTo(element, { clipPath: 'inset(0 0 100% 0)', y: 30 }, {
+        gsap.fromTo(element, { clipPath: 'inset(0 0 100% 0)', y: mobile ? 12 : 30 }, {
           clipPath: 'inset(0 0 0% 0)',
           y: 0,
-          duration: 1.15,
+          duration: mobile ? 0.5 : 1.15,
           ease: 'power3.out',
           scrollTrigger: { trigger: element, start: 'top 84%', once: true }
         })
@@ -1039,8 +1162,8 @@ const setupAnimations = (): (() => void) => {
         ease: 'none',
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1.1 }
       })
-      gsap.fromTo('.hero-title-line', { yPercent: 115 }, { yPercent: 0, duration: 1.2, stagger: 0.1, ease: 'power4.out', delay: 0.2 })
-      gsap.fromTo('.hero-animate', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, delay: 0.55, ease: 'power2.out' })
+      gsap.fromTo('.hero-title-line', { yPercent: 115 }, { yPercent: 0, duration: mobile ? 0.7 : 1.2, stagger: 0.1, ease: 'power4.out', delay: mobile ? 0.1 : 0.2 })
+      gsap.fromTo('.hero-animate', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08, delay: mobile ? 0.25 : 0.55, ease: 'power2.out' })
       gsap.to('.hero__content', {
         yPercent: 10,
         opacity: 0.35,
@@ -1100,10 +1223,13 @@ const renderPage = (): void => {
 
   const cleanups = [
     setupNavigation(),
+    setupGalleryCases(),
     setupCalculator(),
     setupForm(siteContent[locale]),
     setupMessengerFab(),
+    setupMobileCta(),
     setupFaq(),
+    setupTestimonialsSlider(),
     setupPointerHud(),
     setupAnimations(),
     setupLocale()
@@ -1118,34 +1244,6 @@ const bootstrap = async (): Promise<void> => {
   const loaderImage = loader?.querySelector('img')
   if (loaderImage) loaderImage.src = asset(siteContent[locale].brand.image)
   renderPage()
-
-  if (webGLAllowed) {
-    const architecture = select<HTMLElement>('#architecture')
-    let sceneRequested = false
-    const loadScene = (): void => {
-      if (sceneRequested) return
-      sceneRequested = true
-      import('./scene')
-        .then(({ createInteriorScene }) => {
-          sceneController = createInteriorScene(canvas, reducedMotion)
-          document.body.classList.add('has-webgl')
-          const bounds = architecture.getBoundingClientRect()
-          sceneController.setMode(bounds.top < window.innerHeight && bounds.bottom > 0 ? 'architecture' : 'hidden')
-          ScrollTrigger.refresh()
-        })
-        .catch(() => document.body.classList.add('no-webgl'))
-    }
-    const sceneObserver = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return
-      sceneObserver.disconnect()
-      loadScene()
-    }, { rootMargin: '120% 0px' })
-    sceneObserver.observe(architecture)
-    window.setTimeout(loadScene, 4500)
-  } else {
-    canvas.remove()
-    document.body.classList.add('no-webgl')
-  }
 
   dismissLoader()
   window.setTimeout(dismissLoader, 1800)

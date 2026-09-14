@@ -5,17 +5,6 @@ type Stat = {
   label: string
 }
 
-type Chapter = {
-  index: string
-  eyebrow: string
-  title: string
-  body: string
-  metric: string
-  metricLabel: string
-  image: string
-  tag: string
-}
-
 type ProcessStep = {
   index: string
   title: string
@@ -37,20 +26,17 @@ type Condition = {
   multiplier: number
 }
 
-type ValueItem = {
-  index: string
-  title: string
-  body: string
-  metric: string
-  metricLabel: string
-}
-
 type GalleryItem = {
   index: string
   title: string
   location: string
   image: string
   tag: string
+  description: string
+  details: string[]
+  renovationId: RenovationType['id']
+  conditionId: Condition['id']
+  area?: number
 }
 
 export type SiteCopy = {
@@ -58,7 +44,7 @@ export type SiteCopy = {
   metaTitle: string
   metaDescription: string
   brand: { image: string; top: string; bottom: string }
-  nav: { story: string; architecture: string; estimate: string; process: string; contact: string }
+  nav: { estimate: string; process: string; contact: string }
   common: { discuss: string; details: string; optional: string }
   hero: {
     eyebrow: string
@@ -73,33 +59,34 @@ export type SiteCopy = {
     image: string
     stats: Stat[]
   }
-  story: {
-    eyebrow: string
-    title: string
-    lead: string
-    quote: string
-    formationImage: string
-    cards: Array<{ number: string; title: string; body: string; image: string; tag: string }>
-  }
-  value: {
-    eyebrow: string
-    marquee: string
-    title: string
-    lead: string
-    items: ValueItem[]
-  }
-  architecture: {
+  packages: {
     eyebrow: string
     title: string
     intro: string
-    chapters: Chapter[]
-    drag: string
+    items: Array<{
+      name: string
+      badge: string
+      pricePerSqm: string
+      timeline: string
+      guarantee: string
+      description: string
+      features: string[]
+      cta: string
+    }>
   }
   gallery: {
     eyebrow: string
     title: string
     intro: string
     cue: string
+    openCase: string
+    closeCase: string
+    areaLabel: string
+    formatLabel: string
+    timelineLabel: string
+    budgetLabel: string
+    rateLabel: string
+    calculationNote: string
     items: GalleryItem[]
   }
   estimate: {
@@ -118,12 +105,9 @@ export type SiteCopy = {
     disclaimer: string
     conditions: Condition[]
     renovationTypes: RenovationType[]
-  }
-  assurance: {
-    eyebrow: string
-    title: string
-    lead: string
-    metrics: Array<{ value: string; label: string; detail: string }>
+    nextStepImage: string
+    nextStepImageAlt: string
+    nextStepEstimateLabel: string
   }
   process: {
     eyebrow: string
@@ -141,6 +125,27 @@ export type SiteCopy = {
     title: string
     lead: string
     items: Array<{ question: string; answer: string }>
+  }
+  testimonials: {
+    eyebrow: string
+    title: string
+    lead: string
+    items: Array<{
+      image: string
+      messenger: 'Telegram' | 'Viber' | 'WhatsApp'
+      author: string
+      role: string
+      quote: string
+      rating: number
+    }>
+  }
+  cta: {
+    estimateBanner: { eyebrow: string; title: string; text: string; button: string }
+    processBanner: { eyebrow: string; title: string; text: string; button: string }
+    galleryBanner: { eyebrow: string; title: string; text: string; button: string }
+    faqBanner: { eyebrow: string; title: string; text: string; button: string }
+    testimonialsBanner: { eyebrow: string; title: string; button: string }
+    mobileBar: { calculate: string; write: string }
   }
   contact: {
     eyebrow: string
@@ -172,17 +177,15 @@ export type SiteCopy = {
     viber: string
     mapEmbedUrl: string
   }
-  footer: { line: string; rights: string; privacy: string }
+  footer: { line: string; ctaButton: string; rights: string; privacy: string }
 }
 
 export const content: Record<Locale, SiteCopy> = {  uk: {
     localeName: 'UA',
     metaTitle: 'eLITstroy — ремонт квартир під ключ',
-    metaDescription: 'Косметичний, капітальний та ремонт квартир під ключ: проєкт, фіксована кошторис, контроль строків і гарантія.',
+    metaDescription: 'Ремонт квартир під ключ без головного болю: дизайн-проєкт, фіксований кошторис, контроль строків і гарантія.',
     brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
     nav: {
-      story: 'Підхід',
-      architecture: 'Ремонт',
       estimate: 'Розрахунок',
       process: 'Процес',
       contact: 'Контакти'
@@ -191,127 +194,83 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
     hero: {
       eyebrow: 'Ремонт квартир × під ключ',
       titleTop: 'Ремонт',
-      titleAccent: 'під ключ, без сюрпризів',
-      lead: 'Беремо квартиру від стану «після будівельників» або «старий фонд» до готового простору — з дизайн-проєктом, фіксованою кошторисом і гарантією.',
+      titleAccent: 'під ключ, без головного болю',
+      lead: 'Фіксований кошторис у договорі — 0 прихованих доплат. Поетапна оплата — платите лише за прийняті роботи. Гарантія 24 місяці на письмі. 120+ об’єктів здано в строк. Ви бачите ціну та 3D-результат до старту робіт, далі — без вашого втручання.',
       primary: 'Розрахувати ремонт',
-      secondary: 'Дослідити етапи',
-      availability: 'Вільні слоти · 2026',
+      secondary: 'Дивитись ціни',
+      availability: '3 вільні слоти · 2026',
       scroll: 'Гортайте, щоб дослідити',
       model: 'Concept 01 / City line',
       image: '/images/hero-cabin.webp',
       stats: [
-        { value: '01', label: 'єдина команда' },
-        { value: '360°', label: 'цикл ремонту' },
-        { value: 'UA / EN', label: 'для власників та інвесторів' }
+        { value: '24 міс', label: 'гарантія на роботи' },
+        { value: '20 хв', label: 'до відповіді на запит' },
+        { value: '120+', label: 'об’єктів здано в строк' }
       ]
     },
-    story: {
-      eyebrow: 'Ремонт, який можна спланувати',
-      title: 'Створюємо не ремонт заради ремонту. Створюємо простір із власним сценарієм життя.',
-      lead: 'Поєднуємо обстеження об’єкта, виразний дизайн-проєкт і дисципліну реалізації. Кожне рішення працює на зручність простору сьогодні та його вартість завтра.',
-      quote: 'Ремонт має не просто завершитися. Він має працювати на вас.',
-      formationImage: '/images/story-interior.webp',
-      cards: [
-        {
-          number: '01',
-          title: 'Обстеження об’єкта',
-          body: 'Оцінюємо стан квартири, комунікації, перекриття та приховані ризики ще до першої цифри в кошторисі.',
-          image: '/images/story-location.webp',
-          tag: 'ОГЛЯД / СТАН'
-        },
-        {
-          number: '02',
-          title: 'Дизайн-проєкт',
-          body: 'Проєктуємо планування, світло та матеріали як досвід, у якому зручно жати щодня.',
-          image: '/images/story-interior.webp',
-          tag: 'ПРОЄКТ / ПРОСТІР'
-        },
-        {
-          number: '03',
-          title: 'Фіксована кошторис',
-          body: 'Формуємо прозорий бюджет, графік робіт і поетапне приймання без сюрпризів у фіналі.',
-          image: '/images/story-management.webp',
-          tag: 'ПІД КЛЮЧ / БЮДЖЕТ'
-        }
-      ]
-    },
-    value: {
-      eyebrow: 'Повна система реалізації ремонту',
-      marquee: 'PLAN · DEMOLITION · ROUGH-IN · FINISHING · HANDOVER · ',
-      title: 'Три дисципліни працюють як один механізм.',
-      lead: 'Ми не передаємо квартиру між розрізненими бригадами. Проєкт, реалізація та контроль якості розвиваються одночасно й підтримують єдиний графік об’єкта.',
+    packages: {
+      eyebrow: 'Прозорі пакети з фіксованою ціною',
+      title: 'Термін і гарантія - у договорі.',
+      intro: 'Оберіть рівень робіт — ціну за м², термін і гарантію ви бачите одразу. Точну цифру зафіксуємо в договорі після безкоштовного огляду, і вона не зросте ні на долар без вашого рішення.',
       items: [
-        { index: '01', title: 'Ремонт як система', body: 'Робота починається з планування, сценаріїв використання та бюджету — і лише потім стає інтер’єром.', metric: '01', metricLabel: 'цілісний проєкт' },
-        { index: '02', title: 'Реалізація без розривів', body: 'Закупівлі, графік і будівельні рішення перевіряються на відповідність початковій кошторисі.', metric: '360°', metricLabel: 'контроль циклу' },
-        { index: '03', title: 'Контроль після здачі', body: 'Гарантійні терміни, сервісні виїзди та стан комунікацій залишаються під нашим наглядом після здачі.', metric: '24', metricLabel: 'місяці гарантії' }
-      ]
-    },
-    architecture: {
-      eyebrow: 'Одна квартира. Чотири шари цінності.',
-      title: 'Ремонт, спроєктований як система',
-      intro: 'Розкладаємо ремонт на складові — від обстеження до здачі. Гортайте, щоб побачити логіку процесу.',
-      drag: 'Сцена реагує на рух',
-      chapters: [
         {
-          index: '01',
-          eyebrow: 'Основа',
-          title: 'Стан квартири формує кошторис',
-          body: 'Комунікації, перекриття, вологість і стан стін визначають обсяг підготовчих робіт і реальний бюджет.',
-          metric: '48 год',
-          metricLabel: 'на діагностику об’єкта',
-          image: '/images/arch-plot.webp',
-          tag: '01 · ОГЛЯД'
+          name: 'Косметичний',
+          badge: 'Швидке оновлення',
+          pricePerSqm: 'від $190/м²',
+          timeline: '3–5 тижнів',
+          guarantee: 'Гарантія 12 міс',
+          description: 'Оновлення оздоблення без перепланування та заміни інженерії. Для квартир у жилому стані, де потрібен свіжий вигляд.',
+          features: ['Фарбування стін та стель, заміна покриттів підлоги', 'Косметичний ремонт санвузла без заміни труб', 'Установка освітлення та розеток (до 20 точок)', 'Прибирання після робіт, вивіз сміття'],
+          cta: 'Розрахувати косметичний'
         },
         {
-          index: '02',
-          eyebrow: 'Черновий етап',
-          title: 'Інженерія формує надійність',
-          body: 'Демонтаж, електрика, сантехніка та вирівнювання створюють основу, яка служить десятиліттями.',
-          metric: '120+',
-          metricLabel: 'контрольних точок',
-          image: '/images/arch-facade.webp',
-          tag: '02 · ЧОРНОВІ РОБОТИ'
+          name: 'Капітальний',
+          badge: 'Хіт продажів',
+          pricePerSqm: 'від $340/м²',
+          timeline: '6–10 тижнів',
+          guarantee: 'Гарантія 24 міс',
+          description: 'Інженерія, стіни, підлога та сантехніка з нуля. Основа, яка служить 20+ років без ремонту.',
+          features: ['Демонтаж старих матеріалів, вирівнювання всіх поверхонь', 'Електрика та сантехніка з нуля — за проєктом', 'Гіпсокартон, стяжка, штукатурка, шпаклівка', 'Поетапне приймання з фотоотчетами після кожного етапу'],
+          cta: 'Розрахувати капітальний'
         },
         {
-          index: '03',
-          eyebrow: 'Чистова оздоблення',
-          title: 'Деталі формують характер',
-          body: 'Матеріали, світло, сантехніка й меблі збираються у простір, який виглядає продуманим до дрібниць.',
-          metric: '4 етапи',
-          metricLabel: 'поетапного приймання',
-          image: '/images/gallery-built-to-last.webp',
-          tag: '03 · ОЗДОБЛЕННЯ'
-        },
-        {
-          index: '04',
-          eyebrow: 'Здача',
-          title: 'Сервіс формує спокій',
-          body: 'Професійне прибирання, інструктаж, документація та гарантійна підтримка після здачі об’єкта.',
-          metric: '24 міс',
-          metricLabel: 'гарантії на роботи',
-          image: '/images/arch-service.webp',
-          tag: '04 · ЗДАЧА'
+          name: 'Під ключ',
+          badge: 'Повний цикл',
+          pricePerSqm: 'від $520/м²',
+          timeline: '9–14 тижнів',
+          guarantee: 'Гарантія 24 міс',
+          description: 'Дизайн-проєкт, матеріали, роботи та здача повністю. Ви заїжджаєте в готову квартиру — без будівельного контролю з вашого боку.',
+          features: ['Дизайн-проєкт та 3D-візуалізація до старту робіт', 'Закупівля матеріалів та меблювання під ключ', 'Усі роботи капітального + чистова оздоба та фінішний декор', 'Прибирання, документація та передача ключів — готово до життя'],
+          cta: 'Розрахувати під ключ'
         }
       ]
     },
     gallery: {
-      eyebrow: 'Простори, які запам’ятовують',
-      title: 'Не каталог ремонтів. Колекція готових сценаріїв життя.',
-      intro: 'Вертикальний скрол перетворюється на горизонтальну подорож — від першого огляду квартири до деталей чистової оздоблення.',
-      cue: 'Гортайте далі',
+      eyebrow: 'Об’єкти та сценарії ремонту',
+      title: 'Дивіться не лише фото — дивіться вихідні дані.',
+      intro: 'Для кожного об’єкта показуємо формат робіт, площу та орієнтир за базовими тарифами. Відкрийте картку, щоб побачити, з чого складається сценарій ремонту.',
+      cue: 'Гортайте та відкривайте',
+      openCase: 'Дивитися деталі',
+      closeCase: 'Закрити',
+      areaLabel: 'Площа',
+      formatLabel: 'Формат',
+      timelineLabel: 'Орієнтовний строк',
+      budgetLabel: 'Орієнтовний бюджет',
+      rateLabel: 'Базова ставка',
+      calculationNote: 'Це орієнтир за базовими тарифами сайту, а не фактичний кошторис показаного об’єкта. Точний кошторис формується після огляду та узгодження комплектації.',
       items: [
-        { index: '01', title: 'Свіжий старт', location: 'Студія 38 м²', image: '/images/gallery-forest-frame.webp', tag: 'ПІД КЛЮЧ' },
-        { index: '02', title: 'Тихий інтер’єр', location: 'Спальня 62 м²', image: '/images/gallery-quiet-interior.webp', tag: 'ІНТЕР’ЄР' },
-        { index: '03', title: 'Приватний ритуал', location: 'Санвузол та відновлення', image: '/images/gallery-private-ritual.webp', tag: 'САНВУЗОЛ' },
-        { index: '04', title: 'Відкритий простір', location: 'Кухня-вітальня 74 м²', image: '/images/gallery-remote-ground.webp', tag: 'ПЛАНУВАННЯ' },
-        { index: '05', title: 'Створено надовго', location: 'Контроль інженерії', image: '/images/gallery-built-to-last.webp', tag: 'ЧОРНОВІ РОБОТИ' },
-        { index: '06', title: 'Готово до життя', location: 'Здача під ключ', image: '/images/gallery-visible-asset.webp', tag: 'ЗДАЧА' }
+        { index: '01', title: 'Свіжий старт', location: 'Студія 38 м²', image: '/images/gallery-forest-frame.webp', tag: 'ПІД КЛЮЧ', description: 'Компактна студія з повним циклом робіт — від планування до готового інтер’єру.', details: ['3D-візуалізація до старту', 'Інженерія та чистове оздоблення', 'Комплектація і фінальна здача'], renovationId: 'turnkey', conditionId: 'new', area: 38 },
+        { index: '02', title: 'Тихий інтер’єр', location: 'Квартира 62 м²', image: '/images/gallery-quiet-interior.webp', tag: 'ІНТЕР’ЄР', description: 'Капітальний сценарій для квартири з оновленням інженерії, поверхонь і сантехніки.', details: ['Повна підготовка поверхонь', 'Нова електрика та сантехніка', 'Поетапне приймання робіт'], renovationId: 'capital', conditionId: 'new', area: 62 },
+        { index: '03', title: 'Приватний ритуал', location: 'Санвузол та відновлення', image: '/images/gallery-private-ritual.webp', tag: 'САНВУЗОЛ', description: 'Оновлення санвузла як окремої зони без вигаданої загальної площі квартири.', details: ['Демонтаж і підготовка основи', 'Сантехнічні та плиточні роботи', 'Фінішне освітлення і прибирання'], renovationId: 'capital', conditionId: 'secondary' },
+        { index: '04', title: 'Відкритий простір', location: 'Квартира 74 м²', image: '/images/gallery-remote-ground.webp', tag: 'ПЛАНУВАННЯ', description: 'Повний цикл для квартири з об’єднаною кухнею-вітальнею та заздалегідь погодженим результатом.', details: ['Планувальне рішення', '3D-візуалізація матеріалів', 'Реалізація та комплектація під ключ'], renovationId: 'turnkey', conditionId: 'new', area: 74 },
+        { index: '05', title: 'Створено надовго', location: 'Контроль інженерії', image: '/images/gallery-built-to-last.webp', tag: 'ЧОРНОВІ РОБОТИ', description: 'Сценарій капітального ремонту з фокусом на приховані роботи та контроль кожного етапу.', details: ['Електрика і сантехніка за проєктом', 'Стяжка, штукатурка та шпаклівка', 'Фотофіксація контрольних точок'], renovationId: 'capital', conditionId: 'secondary' },
+        { index: '06', title: 'Готово до життя', location: 'Здача під ключ', image: '/images/gallery-visible-asset.webp', tag: 'ЗДАЧА', description: 'Сценарій, у якому одна команда відповідає за проєкт, матеріали, роботи та передачу ключів.', details: ['Єдиний договір і фіксація ціни', 'Комплектація матеріалами та меблями', 'Прибирання, документи і гарантія'], renovationId: 'turnkey', conditionId: 'secondary' }
       ]
     },
     estimate: {
-      eyebrow: 'Демонстраційний розрахунок',
-      title: 'Оцініть вартість ремонту в цифрах',
-      intro: 'Налаштуйте базові параметри, щоб побачити орієнтовну смету. Точний розрахунок формується індивідуально після обстеження об’єкта.',
+      eyebrow: 'Калькулятор вартості',
+      title: 'Приблизний розрахунок ремонту',
+      intro: 'Вкажіть площу, стан об’єкта та формат ремонту — калькулятор одразу покаже орієнтир. Точний кошторис підготуємо після огляду й узгодження комплектації та зафіксуємо в договорі.',
       area: 'Площа квартири',
       areaUnit: 'м²',
       condition: 'Тип об’єкта',
@@ -330,52 +289,44 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         { id: 'cosmetic', name: 'Косметичний', description: 'Оновлення оздоблення без перепланування', pricePerSqm: 190, weeksPerSqm: 0.05 },
         { id: 'capital', name: 'Капітальний', description: 'Інженерія, стіни, підлога, сантехніка', pricePerSqm: 340, weeksPerSqm: 0.1 },
         { id: 'turnkey', name: 'Під ключ', description: 'Проєкт, матеріали, роботи та здача повністю', pricePerSqm: 520, weeksPerSqm: 0.14 }
-      ]
-    },
-    assurance: {
-      eyebrow: 'Контроль замість припущень',
-      title: 'Ви бачите ремонт з чотирьох сторін.',
-      lead: 'Єдина панель рішень поєднує кошторис, графік, якість матеріалів та результат здачі.',
-      metrics: [
-        { value: '01', label: 'Кошторис і бюджет', detail: 'Фіксуємо обсяг робіт, резерви, ціни матеріалів і правила прийняття рішень.' },
-        { value: '02', label: 'Графік робіт', detail: 'Розкладаємо ремонт на етапи, залежності та відповідальних за кожен блок.' },
-        { value: '03', label: 'Якість матеріалів', detail: 'Перевіряємо поставки, вузли й комплектацію на відповідність проєкту.' },
-        { value: '04', label: 'Здача і гарантія', detail: 'Зводимо прибирання, документацію та гарантійні зобов’язання в одну картину.' }
-      ]
+      ],
+      nextStepImage: '/images/step-concept.webp',
+      nextStepImageAlt: 'Підготовка проєкту та плану ремонту',
+      nextStepEstimateLabel: 'Ваш поточний орієнтир'
     },
     process: {
       eyebrow: 'Від огляду до готової квартири',
-      title: 'Складний процес. Проста комунікація.',
-      intro: 'Ви бачите рішення, статус і наступний крок. Ми координуємо всі етапи, щоб ремонт рухався як єдиний проєкт.',
+      title: 'Складний процес. Проста комунікація. ',
+      intro: 'Ви отримуєте звіти й готові рішення, а не питання. Кожен етап закривається прийманням — наступний не стартує без вашого «так». Фотоотчети після кожного етапу, єдиний чат з командою.',
       steps: [
         {
           index: '01',
-          title: 'Діагностика',
-          body: 'Обстежуємо об’єкт, фіксуємо стан, заміри та критерії майбутнього ремонту.',
+          title: 'Діагностика · безкоштовно',
+          body: 'Виїзд прораба, обстеження об’єкта, заміри та фіксація стану. Ви отримуєте звіт про приховані ризики (комунікації, стіни, вологість) ще до кошторису — за 48 годин.',
           image: '/images/step-strategy.webp'
         },
         {
           index: '02',
-          title: 'Проєкт',
-          body: 'Збираємо планування, матеріали та фінансовий сценарій в одну модель.',
+          title: 'Проєкт · з 3D-візуалізацією',
+          body: 'Планування, матеріали та фінансовий сценарій в одній моделі. Ви бачите результат у 3D до старту робіт — і затверджуєте його, а не виправляєте по ходу.',
           image: '/images/step-concept.webp'
         },
         {
           index: '03',
-          title: 'Ремонт',
-          body: 'Керуємо закупівлями, термінами, якістю та поетапним прийманням робіт.',
+          title: 'Ремонт · поетапне приймання',
+          body: 'Закупівлі, терміни, якість та поетапне приймання під єдиним контролем. Фотоотчети після кожного етапу. Ви платите лише за прийняті роботи — поетапно.',
           image: '/images/step-delivery.webp'
         },
         {
           index: '04',
-          title: 'Здача',
-          body: 'Завершуємо оздоблення, прибирання та передаємо квартиру з гарантією.',
+          title: 'Здача · гарантія 24 міс',
+          body: 'Прибирання, документація та передача ключів. Гарантія 24 місяці на письмі — виправляємо за свій рахунок, без нагадувань з вашого боку.',
           image: '/images/step-launch.webp'
         }
       ],
       trustTitle: 'Ваш ремонт залишається зрозумілим',
       trustBody: 'Структурована звітність і єдина точка комунікації допомагають приймати рішення без інформаційного шуму.',
-      trustItems: ['Етапність і контрольні точки', 'Прозора кошторис', 'Єдина команда реалізації'],
+      trustItems: ['Етапність і 120+ контрольних точок', 'Прозорий кошторис — 0 прихованих доплат', 'Єдина команда реалізації під одним договором'],
       trustImage: '/images/trust-system.webp',
       trustBadge: 'ELIT-STROY · МАТРИЦЯ КОНТРОЛЮ'
     },
@@ -384,16 +335,130 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       title: 'Що важливо знати до старту',
       lead: 'Ключові питання, які допомагають зрозуміти формат співпраці ще до першої зустрічі.',
       items: [
-        { question: 'Чи можна почати без дизайн-проєкту?', answer: 'Так. Для косметичного ремонту достатньо узгодженого списку робіт. Для капітального ремонту та формату «під ключ» ми рекомендуємо проєкт: він захищає бюджет від імпровізацій у процесі.' },
-        { question: 'Коли фіксується точна кошторис?', answer: 'Після обстеження об’єкта, замірів і затвердження комплектації матеріалів. Демонстраційний калькулятор показує логіку ціноутворення, але не замінює індивідуальний розрахунок.' },
-        { question: 'Що входить у ремонт під ключ?', answer: 'Дизайн-проєкт, демонтаж, інженерні мережі, чорнові та чистові роботи, закупівля матеріалів, меблювання, прибирання та здача. Ви отримуєте готову квартиру без власного контролю будівельного процесу.' },
-        { question: 'Як контролюються строки та якість?', answer: 'Через етапи з контрольними точками, фотоотчети, поетапне приймання та єдину відповідальну команду. Формат звітності погоджується на старті проєкту.' }
+        { question: 'Чи можна почати без дизайн-проєкту?', answer: 'Так. Для косметичного ремонту достатньо узгодженого списку робіт. Для капітального та «під ключ» ми наполегливо рекомендуємо проєкт: він захищає бюджет від імпровізацій у процесі та знижує ризик переделок до нуля.' },
+        { question: 'Коли фіксується точний кошторис?', answer: 'Після безкоштовного обстеження об’єкта, замірів і затвердження комплектації матеріалів. Калькулятор показує приблизний орієнтир, але не замінює індивідуальний розрахунок. Кошторис фіксуємо в договорі — 0 прихованих доплат.' },
+        { question: 'Скільки часу займає ремонт?', answer: 'Косметичний — 3–5 тижнів, капітальний — 6–10, під ключ — 9–14 тижнів для квартири 60 м². Точний термін фіксуємо в договорі з штрафними санкціями у ваш бік за прострочення.' },
+        { question: 'Що входить у ремонт під ключ?', answer: 'Дизайн-проєкт з 3D-візуалізацією, демонтаж, інженерні мережі, чорнові та чистові роботи, закупівля матеріалів, меблювання, прибирання та здача. Ви заїжджаєте в готову квартиру — без будівельного контролю з вашого боку.' },
+        { question: 'Чи можна контролювати ремонт віддалено?', answer: 'Так. Фотоотчети, статус етапів, платежі та наступні кроки — в одному чаті. Ви можете бути в іншому місті й приймати етапи онлайн без виїзду на об’єкт. Понад 40% наших клієнтів — інвестори, які контролюють ремонт з телефону.' },
+        { question: 'Як контролюються строки та якість?', answer: 'Через 120+ контрольних точок, фотоотчети після кожного етапу, поетапне приймання та єдину відповідальну команду. Формат звітності погоджується на старті проєкту. Ви платите лише за прийняті роботи.' },
+        { question: 'Що якщо щось зламається після здачі?', answer: 'Гарантія 24 місяці на письмі в договорі. Якщо щось не так — виправляємо за свій рахунок, без нагадувань з вашого боку. Середній час реагування на гарантійний виклик — 48 годин.' }
       ]
+    },
+    testimonials: {
+      eyebrow: 'Досвід наших клієнтів',
+      title: 'Ремонт без головного болю — словами клієнтів',
+      lead: 'Не обіцянки, а реальні переписки з людьми, які вже пройшли шлях від першого огляду до готової квартири.',
+      items: [
+        {
+          image: '/images/testimonials/review-telegram-1.webp',
+          messenger: 'Telegram',
+          author: 'Анна К.',
+          role: 'Новобудова · 64 м² · 7 тижнів',
+          quote: '«Все зроблено якісно і точно в строк. Окреме дякую виконробу Олександру! Ремонт завершено раніше строку»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-viber-2.webp',
+          messenger: 'Viber',
+          author: 'Марія І.',
+          role: 'Ремонт під ключ · 91 м² · 12 тижнів',
+          quote: '«Все як у 3D проєкті, якість на вищому рівні. Ванна та спальня вийшли неймовірними!»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-3.webp',
+          messenger: 'WhatsApp',
+          author: 'Андрій М.',
+          role: 'Капітальний ремонт · 78 м² · 9 тижнів',
+          quote: '«Вклалися рівно в обумовлений кошторис без жодних сюрпризів. Окремий респект за ідеальну плитку»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-4.webp',
+          messenger: 'Telegram',
+          author: 'Дмитро В.',
+          role: 'Інвестиційна квартира · 52 м² · дистанційно',
+          quote: '«Неймовірно зручно, що весь ремонт пройшов дистанційно, поки я був у відрядженні. Дякую за фото- та відеозвіти»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-5.webp',
+          messenger: 'WhatsApp',
+          author: 'Олена К.',
+          role: 'Сімейна квартира · 85 м² · 10 тижнів',
+          quote: '«Заїхали з дітьми, все настільки затишно і якісно. Окрема подяка за ідеально рівні стіни та освітлення»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-6.webp',
+          messenger: 'Telegram',
+          author: 'Сергій К.',
+          role: 'Будинок під ключ · 120 м² · 14 тижнів',
+          quote: '«Жодних затримок, кошторис без доплат, все чітко за договором. Дизайнер і майстри — справжні профі»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-7.webp',
+          messenger: 'Telegram',
+          author: 'Вікторія С.',
+          role: 'Новобудова · 72 м² · 8 тижнів',
+          quote: '«Все настільки ідеально, що навіть прискіпливий чоловік не знайшов до чого придертися! Стіни, сантехніка, плитка — бездоганно»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-viber-8.webp',
+          messenger: 'Viber',
+          author: 'Артем Л.',
+          role: 'Капітальний ремонт · 65 м² · 7 тижнів',
+          quote: '«Ремонт вийшов просто супер, окреме спасибі за допомогу з вибором матеріалів і збережений час!»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-9.webp',
+          messenger: 'WhatsApp',
+          author: 'Михайло Т.',
+          role: 'Квартира під ключ · 58 м² · 8 тижнів',
+          quote: '«Прийняв об’єкт без жодних зауважень. Дуже круто, що кошторис не змінювався протягом робіт»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-10.webp',
+          messenger: 'Telegram',
+          author: 'Юлія Б.',
+          role: 'Дизайнерський ремонт · 94 м² · 11 тижнів',
+          quote: '«Квартира вийшла просто казка! Всі друзі у захваті, дякуємо за втілення складного проєкту»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-11.webp',
+          messenger: 'WhatsApp',
+          author: 'Богдан К.',
+          role: 'Капітальний ремонт · 76 м² · 8 тижнів',
+          quote: '«Підписали фінальний акт, все на вищому рівні. Жодного головного болю за всі 8 тижнів робіт»',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-12.webp',
+          messenger: 'Telegram',
+          author: 'Тетяна П.',
+          role: 'Новобудова · 80 м² · 9 тижнів',
+          quote: '«Вже розставили меблі, все виглядає неймовірно! Дякую за спокійний ремонт і підтримку»',
+          rating: 5
+        }
+      ]
+    },
+    cta: {
+      estimateBanner: { eyebrow: 'Наступний крок', title: 'Перетворимо орієнтир на точний кошторис.', text: 'Обговоримо вихідні дані, оглянемо об’єкт і погодимо комплектацію. Після цього зафіксуємо точний кошторис і строки в договорі — без прихованих доплат.', button: 'Перейти до форми' },
+      processBanner: { eyebrow: 'Перший крок — безкоштовний', title: 'Ремонт без головного болю починається з однієї розмови.', text: 'За 20 хвилин визначимо формат робіт, реалістичний бюджет і наступний крок. Виїзд прораба на огляд — безкоштовно.', button: 'Запланувати огляд' },
+      galleryBanner: { eyebrow: 'Наступний проєкт', title: 'Хочете такий самий результат?', text: 'Покажемо, як досягти цього рівня у вашій квартирі — з фіксованою ціною та строками до старту. 3D-проєкт до першого робітника.', button: 'Обговорити мою квартиру' },
+      faqBanner: { eyebrow: 'Залишились питання', title: 'Одна розмова закриє всі.', text: 'За 20 хвилин обговоримо ваш об’єкт, бюджет і строки — без зобов’язань. Відповідь на запит — у середньому за 20 хвилин.', button: 'Написати нам' },
+      testimonialsBanner: { eyebrow: 'Ваш проєкт', title: 'Наступна історія про спокійний ремонт може бути вашою.', button: 'Розрахувати ремонт' },
+      mobileBar: { calculate: 'Розрахувати', write: 'Написати' }
     },
     contact: {
       eyebrow: 'Почнімо з вашої квартири',
       title: 'Який ремонт ви хочете отримати?',
-      lead: 'Залиште контакти. На першій розмові визначимо формат, бюджет і наступний практичний крок.',
+      lead: 'Залиште контакти — відповімо в середньому протягом 20 хвилин у робочий час. Спершу уточнимо вихідні дані вашої квартири, потім підготуємо точний кошторис після огляду. Без тиску й без зобов’язань.',
       location: 'Харків, Україна',
       locationLabel: 'Базова локація',
       schedule: 'Пн–Пт · 09:00–18:00',
@@ -420,139 +485,95 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       viber: 'viber://chat?number=%2B380000000000',
       mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Ремонт, який працює на ваш простір.', rights: 'eLITstroy. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
+    footer: { line: 'Ремонт без головного болю. Від огляду до здачі.', ctaButton: 'Обговорити проєкт', rights: 'eLITstroy. Концепт 2026.', privacy: 'Дані не передаються третім сторонам' }
   },
   en: {
     localeName: 'EN',
     metaTitle: 'eLITstroy — turnkey apartment renovation',
-    metaDescription: 'Cosmetic, capital and turnkey apartment renovation: design, fixed estimate, schedule control and warranty.',
+    metaDescription: 'Turnkey apartment renovation without the headache: design, fixed estimate, schedule control and warranty.',
     brand: { image: '/brand-mark.png', top: 'ELIT', bottom: 'STROY' },
-    nav: { story: 'Approach', architecture: 'Renovation', estimate: 'Estimate', process: 'Process', contact: 'Contact' },
+    nav: { estimate: 'Estimate', process: 'Process', contact: 'Contact' },
     common: { discuss: 'Discuss a project', details: 'Explore', optional: 'Optional' },
     hero: {
       eyebrow: 'Apartment renovation × turnkey',
       titleTop: 'Renovation',
-      titleAccent: 'turnkey, no surprises',
-      lead: 'We take an apartment from developer finish or dated stock to a ready living space — with a design project, fixed estimate and warranty.',
-      primary: 'Estimate your renovation',
-      secondary: 'Explore the stages',
-      availability: 'Open slots · 2026',
+      titleAccent: 'turnkey, zero headaches',
+      lead: 'Fixed estimate in the contract — 0 hidden charges. Staged payment — you only pay for accepted works. 24-month warranty in writing. 120+ projects delivered on schedule. You see the price and 3D result before work begins, then stay hands-off.',
+      primary: 'Estimate my renovation',
+      secondary: 'See stages and pricing',
+      availability: '3 open slots · 2026',
       scroll: 'Scroll to explore',
       model: 'Concept 01 / City line',
       image: '/images/hero-cabin.webp',
       stats: [
-        { value: '01', label: 'integrated team' },
-        { value: '360°', label: 'renovation cycle' },
-        { value: 'UA / EN', label: 'for owners and investors' }
+        { value: '24 mo', label: 'workmanship warranty' },
+        { value: '20 min', label: 'to a reply on your request' },
+        { value: '120+', label: 'projects delivered on schedule' }
       ]
     },
-    story: {
-      eyebrow: 'A renovation you can plan',
-      title: 'We do not renovate for the sake of renovating. We create a space with its own living scenario.',
-      lead: 'Property survey, expressive design and delivery discipline work together. Every decision improves daily comfort today and the value of the apartment tomorrow.',
-      quote: 'A renovation should not simply end. It should work for you.',
-      formationImage: '/images/story-interior.webp',
-      cards: [
-        {
-          number: '01',
-          title: 'Property survey',
-          body: 'We assess the condition, utilities, slabs and hidden risks before the first number enters the estimate.',
-          image: '/images/story-location.webp',
-          tag: 'SURVEY / CONDITION'
-        },
-        {
-          number: '02',
-          title: 'Design project',
-          body: 'We design layout, lighting and materials as an experience people enjoy living in every day.',
-          image: '/images/story-interior.webp',
-          tag: 'DESIGN / SPACES'
-        },
-        {
-          number: '03',
-          title: 'Fixed estimate',
-          body: 'We create a transparent budget, work schedule and stage-by-stage acceptance without surprises.',
-          image: '/images/story-management.webp',
-          tag: 'TURNKEY / BUDGET'
-        }
-      ]
-    },
-    value: {
-      eyebrow: 'A complete renovation system',
-      marquee: 'PLAN · DEMOLITION · ROUGH-IN · FINISHING · HANDOVER · ',
-      title: 'Three disciplines work as one delivery mechanism.',
-      lead: 'We do not pass the apartment between disconnected crews. Design, delivery and quality control evolve together around one schedule.',
+    packages: {
+      eyebrow: 'Transparent packages with a fixed price',
+      title: 'Three renovation formats. Price per m², timeline and warranty — in the contract.',
+      intro: 'Choose the scope of works — the price per m², timeline and warranty are visible upfront. The precise number is fixed in the contract after a free survey — and it will not grow by a single dollar without your decision.',
       items: [
-        { index: '01', title: 'Renovation as a system', body: 'The concept begins with layout, usage scenarios and budget — only then does it become an interior.', metric: '01', metricLabel: 'integrated project' },
-        { index: '02', title: 'Delivery without gaps', body: 'Procurement, schedule and construction decisions are checked against the original estimate.', metric: '360°', metricLabel: 'cycle control' },
-        { index: '03', title: 'Care after handover', body: 'Warranty, service visits and documentation stay under our supervision after handover.', metric: '24', metricLabel: 'months of warranty' }
-      ]
-    },
-    architecture: {
-      eyebrow: 'One apartment. Four layers of value.',
-      title: 'A renovation designed as a system',
-      intro: 'We break the renovation down into layers — from survey to handover. Scroll to discover how the process works.',
-      drag: 'Scene responds to movement',
-      chapters: [
         {
-          index: '01',
-          eyebrow: 'Foundation',
-          title: 'Condition shapes the estimate',
-          body: 'Utilities, slabs, moisture and wall condition define the preparation scope and the realistic budget.',
-          metric: '48 hrs',
-          metricLabel: 'to survey the property',
-          image: '/images/arch-plot.webp',
-          tag: '01 · SURVEY'
+          name: 'Cosmetic',
+          badge: 'Quick refresh',
+          pricePerSqm: 'from $190/m²',
+          timeline: '3–5 weeks',
+          guarantee: '12-month warranty',
+          description: 'Finishing refresh without layout changes or engineering replacement. For apartments in livable condition that need a fresh look.',
+          features: ['Wall and ceiling painting, floor covering replacement', 'Cosmetic bathroom refresh without pipe replacement', 'Lighting and socket installation (up to 20 points)', 'Post-work cleaning and debris removal'],
+          cta: 'Estimate cosmetic'
         },
         {
-          index: '02',
-          eyebrow: 'Rough-in',
-          title: 'Engineering creates reliability',
-          body: 'Demolition, electrics, plumbing and levelling build the base that lasts for decades.',
-          metric: '120+',
-          metricLabel: 'checkpoints',
-          image: '/images/arch-facade.webp',
-          tag: '02 · ROUGH-IN'
+          name: 'Capital',
+          badge: 'Best seller',
+          pricePerSqm: 'from $340/m²',
+          timeline: '6–10 weeks',
+          guarantee: '24-month warranty',
+          description: 'Engineering, walls, floors and plumbing from scratch. The base that lasts 20+ years without renovation.',
+          features: ['Demolition of old materials, levelling of all surfaces', 'Electrics and plumbing from scratch — per design', 'Drywall, screed, plaster, putty', 'Staged acceptance with photo reports after every stage'],
+          cta: 'Estimate capital'
         },
         {
-          index: '03',
-          eyebrow: 'Finishing',
-          title: 'Details create character',
-          body: 'Materials, lighting, sanitary ware and furniture come together into a space considered down to the details.',
-          metric: '4 stages',
-          metricLabel: 'of staged acceptance',
-          image: '/images/gallery-built-to-last.webp',
-          tag: '03 · FINISHING'
-        },
-        {
-          index: '04',
-          eyebrow: 'Handover',
-          title: 'Service creates peace of mind',
-          body: 'Professional cleaning, walkthrough, documentation and warranty support after the keys are handed over.',
-          metric: '24 mo',
-          metricLabel: 'workmanship warranty',
-          image: '/images/arch-service.webp',
-          tag: '04 · HANDOVER'
+          name: 'Turnkey',
+          badge: 'Full cycle',
+          pricePerSqm: 'from $520/m²',
+          timeline: '9–14 weeks',
+          guarantee: '24-month warranty',
+          description: 'Design project, materials, works and full handover. You move into a ready apartment — without managing the construction.',
+          features: ['Design project and 3D visualization before work begins', 'Material procurement and furnishing turnkey', 'All capital works + finishing and final decor', 'Cleaning, documentation and key handover — ready to live in'],
+          cta: 'Estimate turnkey'
         }
       ]
     },
     gallery: {
-      eyebrow: 'Spaces worth remembering',
-      title: 'Not a catalogue of renovations. A collection of ready living scenarios.',
-      intro: 'Vertical scrolling becomes a horizontal journey — from the first apartment walkthrough to the details of finishing.',
-      cue: 'Keep scrolling',
+      eyebrow: 'Projects and renovation scenarios',
+      title: 'See more than photos — see the starting data.',
+      intro: 'Each project shows its scope, area and an estimate based on our standard rates. Open a card to see what the renovation scenario includes.',
+      cue: 'Scroll and explore',
+      openCase: 'View details',
+      closeCase: 'Close',
+      areaLabel: 'Area',
+      formatLabel: 'Format',
+      timelineLabel: 'Indicative timeline',
+      budgetLabel: 'Indicative budget',
+      rateLabel: 'Standard rate',
+      calculationNote: 'This is an estimate based on the standard rates shown on the website, not the actual quotation for the pictured project. A precise quotation is prepared after the survey and specification approval.',
       items: [
-        { index: '01', title: 'Fresh Start', location: 'Studio 38 m²', image: '/images/gallery-forest-frame.webp', tag: 'TURNKEY' },
-        { index: '02', title: 'Quiet Interior', location: 'Bedroom 62 m²', image: '/images/gallery-quiet-interior.webp', tag: 'INTERIOR' },
-        { index: '03', title: 'Private Ritual', location: 'Bathroom and recovery', image: '/images/gallery-private-ritual.webp', tag: 'BATHROOM' },
-        { index: '04', title: 'Open Ground', location: 'Kitchen-living 74 m²', image: '/images/gallery-remote-ground.webp', tag: 'LAYOUT' },
-        { index: '05', title: 'Built to Last', location: 'Engineering control', image: '/images/gallery-built-to-last.webp', tag: 'ROUGH-IN' },
-        { index: '06', title: 'Ready to Live', location: 'Turnkey handover', image: '/images/gallery-visible-asset.webp', tag: 'HANDOVER' }
+        { index: '01', title: 'Fresh Start', location: 'Studio 38 m²', image: '/images/gallery-forest-frame.webp', tag: 'TURNKEY', description: 'A compact studio delivered as a full cycle — from planning to a ready interior.', details: ['3D visualization before work starts', 'Engineering and finishing works', 'Specification and final handover'], renovationId: 'turnkey', conditionId: 'new', area: 38 },
+        { index: '02', title: 'Quiet Interior', location: 'Apartment 62 m²', image: '/images/gallery-quiet-interior.webp', tag: 'INTERIOR', description: 'A capital renovation scenario with renewed engineering, surfaces and plumbing.', details: ['Complete surface preparation', 'New electrics and plumbing', 'Staged acceptance of works'], renovationId: 'capital', conditionId: 'new', area: 62 },
+        { index: '03', title: 'Private Ritual', location: 'Bathroom renovation', image: '/images/gallery-private-ritual.webp', tag: 'BATHROOM', description: 'A standalone bathroom renovation without inventing a total apartment area.', details: ['Demolition and base preparation', 'Plumbing and tiling works', 'Final lighting and cleaning'], renovationId: 'capital', conditionId: 'secondary' },
+        { index: '04', title: 'Open Ground', location: 'Apartment 74 m²', image: '/images/gallery-remote-ground.webp', tag: 'LAYOUT', description: 'A full-cycle apartment with an open kitchen-living area and an approved result before work starts.', details: ['Space-planning solution', '3D material visualization', 'Turnkey delivery and specification'], renovationId: 'turnkey', conditionId: 'new', area: 74 },
+        { index: '05', title: 'Built to Last', location: 'Engineering control', image: '/images/gallery-built-to-last.webp', tag: 'ROUGH-IN', description: 'A capital renovation scenario focused on concealed works and stage-by-stage control.', details: ['Electrical and plumbing per design', 'Screed, plaster and putty', 'Photo records at checkpoints'], renovationId: 'capital', conditionId: 'secondary' },
+        { index: '06', title: 'Ready to Live', location: 'Turnkey handover', image: '/images/gallery-visible-asset.webp', tag: 'HANDOVER', description: 'One accountable team handles the design, materials, works and key handover.', details: ['One contract and fixed quotation', 'Materials and furnishing specification', 'Cleaning, documents and warranty'], renovationId: 'turnkey', conditionId: 'secondary' }
       ]
     },
     estimate: {
-      eyebrow: 'Demonstration model',
-      title: 'Explore the renovation cost in numbers',
-      intro: 'Adjust the essentials to view an indicative estimate. A precise quotation is built individually after surveying the property.',
+      eyebrow: 'Cost calculator',
+      title: 'An indicative renovation estimate',
+      intro: 'Enter the area, property condition and renovation format to see an immediate estimate. We prepare and contractually fix the precise quotation after the survey and specification approval.',
       area: 'Apartment area',
       areaUnit: 'm²',
       condition: 'Property type',
@@ -571,52 +592,44 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
         { id: 'cosmetic', name: 'Cosmetic', description: 'Finishing refresh without layout changes', pricePerSqm: 190, weeksPerSqm: 0.05 },
         { id: 'capital', name: 'Capital', description: 'Engineering, walls, floors, plumbing', pricePerSqm: 340, weeksPerSqm: 0.1 },
         { id: 'turnkey', name: 'Turnkey', description: 'Design, materials, works and full handover', pricePerSqm: 520, weeksPerSqm: 0.14 }
-      ]
-    },
-    assurance: {
-      eyebrow: 'Control instead of assumptions',
-      title: 'You see the renovation from four sides.',
-      lead: 'One decision layer brings together the estimate, schedule, material quality and handover result.',
-      metrics: [
-        { value: '01', label: 'Estimate and budget', detail: 'We define the scope, reserves, material prices and decision rules.' },
-        { value: '02', label: 'Work schedule', detail: 'We map the renovation into stages, dependencies and accountable owners.' },
-        { value: '03', label: 'Material quality', detail: 'Deliveries, details and specification are checked against the design project.' },
-        { value: '04', label: 'Handover and warranty', detail: 'Cleaning, documentation and warranty obligations come together in one view.' }
-      ]
+      ],
+      nextStepImage: '/images/step-concept.webp',
+      nextStepImageAlt: 'Preparing the renovation design and plan',
+      nextStepEstimateLabel: 'Your current estimate'
     },
     process: {
       eyebrow: 'From walkthrough to ready apartment',
-      title: 'A complex process. Simple communication.',
-      intro: 'You see the decision, status and next step. We coordinate every stage so the renovation moves forward as one project.',
+      title: 'A complex process. Simple communication. 4 stages, 120+ checkpoints.',
+      intro: 'You receive reports and ready decisions, not questions. Every stage closes with acceptance — the next one never starts without your "yes". Photo reports after every stage, one chat with the team.',
       steps: [
         {
           index: '01',
-          title: 'Survey',
-          body: 'We inspect the property, record condition, measurements and criteria for the future renovation.',
+          title: 'Survey · free of charge',
+          body: 'Foreman site visit, property inspection, measurements and condition recording. You receive a report on hidden risks (utilities, walls, moisture) before the estimate — within 48 hours.',
           image: '/images/step-strategy.webp'
         },
         {
           index: '02',
-          title: 'Design',
-          body: 'We combine layout, materials and the financial scenario into one model.',
+          title: 'Design · with 3D visualization',
+          body: 'Layout, materials and the financial scenario in one model. You see the result in 3D before work begins — and approve it, rather than fixing it on the go.',
           image: '/images/step-concept.webp'
         },
         {
           index: '03',
-          title: 'Renovation',
-          body: 'We manage procurement, timing, quality and staged acceptance of works.',
+          title: 'Renovation · staged acceptance',
+          body: 'Procurement, timing, quality and staged acceptance under one control. Photo reports after every stage. You only pay for accepted works — in stages.',
           image: '/images/step-delivery.webp'
         },
         {
           index: '04',
-          title: 'Handover',
-          body: 'We complete finishing, cleaning and hand the apartment over with a warranty.',
+          title: 'Handover · 24-month warranty',
+          body: 'Cleaning, documentation and key handover. 24-month warranty in writing — we fix issues at our cost, without reminders from your side.',
           image: '/images/step-launch.webp'
         }
       ],
       trustTitle: 'Your renovation stays understandable',
       trustBody: 'Structured reporting and one point of communication help you make decisions without the noise.',
-      trustItems: ['Clear milestones', 'Transparent estimate', 'One delivery team'],
+      trustItems: ['Stages and 120+ checkpoints', 'Transparent estimate — 0 hidden charges', 'One delivery team under one contract'],
       trustImage: '/images/trust-system.webp',
       trustBadge: 'ELIT-STROY · CONTROL MATRIX'
     },
@@ -625,16 +638,130 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       title: 'What matters before you start',
       lead: 'The essential questions that clarify the engagement before the first meeting.',
       items: [
-        { question: 'Can I start without a design project?', answer: 'Yes. Cosmetic renovation only needs an agreed scope of works. For capital and turnkey renovation we recommend a design project: it protects the budget from improvisation during the process.' },
-        { question: 'When is the precise estimate fixed?', answer: 'After the property survey, measurements and material specification are approved. The demonstration calculator explains the pricing logic but does not replace an individual quotation.' },
-        { question: 'What does turnkey renovation include?', answer: 'Design project, demolition, engineering, rough and finishing works, material procurement, furnishing, cleaning and handover. You receive a ready apartment without managing the construction process yourself.' },
-        { question: 'How are schedule and quality controlled?', answer: 'Through milestones with checkpoints, photo reports, staged acceptance and one accountable team. The reporting format is agreed at project start.' }
+        { question: 'Can I start without a design project?', answer: 'Yes. Cosmetic renovation only needs an agreed scope of works. For capital and turnkey we strongly recommend a project: it protects the budget from improvisation during the process and reduces the risk of rework to zero.' },
+        { question: 'When is the precise estimate fixed?', answer: 'After a free property survey, measurements and material specification are approved. The demonstration calculator explains the pricing logic but does not replace an individual quotation. The estimate is fixed in the contract — 0 hidden charges.' },
+        { question: 'How long does the renovation take?', answer: 'Cosmetic — 3–5 weeks, capital — 6–10, turnkey — 9–14 weeks for a 60 m² apartment. The exact timeline is fixed in the contract with penalty clauses in your favor for delays.' },
+        { question: 'What does turnkey renovation include?', answer: 'Design project with 3D visualization, demolition, engineering, rough and finishing works, material procurement, furnishing, cleaning and handover. You move into a ready apartment — without managing the construction yourself.' },
+        { question: 'Can I control the renovation remotely?', answer: 'Yes. Photo reports, stage status, payments and next steps — all in one chat. You can be in another city and accept stages online without visiting the site. Over 40% of our clients are investors who control renovation from their phone.' },
+        { question: 'How are schedule and quality controlled?', answer: 'Through 120+ checkpoints, photo reports after every stage, staged acceptance and one accountable team. The reporting format is agreed at project start. You only pay for accepted works.' },
+        { question: 'What if something breaks after handover?', answer: '24-month warranty in writing in the contract. If something is wrong — we fix it at our cost, without reminders from your side. Average response time on a warranty call — 48 hours.' }
       ]
+    },
+    testimonials: {
+      eyebrow: 'Client experience',
+      title: 'A headache-free renovation — in real chats',
+      lead: 'Real messenger conversations with clients who have completed their renovation from first survey to move-in day.',
+      items: [
+        {
+          image: '/images/testimonials/review-telegram-1.webp',
+          messenger: 'Telegram',
+          author: 'Anna K.',
+          role: 'New build · 64 m² · 7 weeks',
+          quote: '“Everything done to top quality and ahead of schedule. Special thanks to the foreman Oleksandr!”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-viber-2.webp',
+          messenger: 'Viber',
+          author: 'Mariia I.',
+          role: 'Turnkey renovation · 91 m² · 12 weeks',
+          quote: '“Exactly as in the 3D design, top tier quality. The bathroom and bedroom turned out incredible!”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-3.webp',
+          messenger: 'WhatsApp',
+          author: 'Andrii M.',
+          role: 'Capital renovation · 78 m² · 9 weeks',
+          quote: '“Stayed exactly within the agreed budget with zero surprises. Special respect for the tiling work”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-4.webp',
+          messenger: 'Telegram',
+          author: 'Dmytro V.',
+          role: 'Investment apartment · 52 m² · remotely',
+          quote: '“Incredibly convenient to manage the whole renovation remotely. Thank you for regular photo and video reports”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-5.webp',
+          messenger: 'WhatsApp',
+          author: 'Olena K.',
+          role: 'Family apartment · 85 m² · 10 weeks',
+          quote: '“Moved in with the kids, everything is so cozy and well-made. Level walls and lighting are perfect”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-6.webp',
+          messenger: 'Telegram',
+          author: 'Serhii K.',
+          role: 'Turnkey home · 120 m² · 14 weeks',
+          quote: '“Zero delays, fixed estimate without surcharges, strictly by contract. Designer and craftsmen are real pros”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-7.webp',
+          messenger: 'Telegram',
+          author: 'Viktoriia S.',
+          role: 'New build · 72 m² · 8 weeks',
+          quote: '“Everything is so flawless that even my meticulous husband found zero faults! Walls, plumbing, tiles are spotless”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-viber-8.webp',
+          messenger: 'Viber',
+          author: 'Artem L.',
+          role: 'Capital renovation · 65 m² · 7 weeks',
+          quote: '“The renovation turned out great! Special thanks for helping with materials selection and saving our time”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-9.webp',
+          messenger: 'WhatsApp',
+          author: 'Mykhailo T.',
+          role: 'Turnkey apartment · 58 m² · 8 weeks',
+          quote: '“Accepted the apartment without a single complaint. Great that the estimate did not change throughout the work”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-10.webp',
+          messenger: 'Telegram',
+          author: 'Yuliia B.',
+          role: 'Designer renovation · 94 m² · 11 weeks',
+          quote: '“The apartment is pure magic! All our friends ask for your contacts, thanks for executing our complex design”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-whatsapp-11.webp',
+          messenger: 'WhatsApp',
+          author: 'Bohdan K.',
+          role: 'Capital renovation · 76 m² · 8 weeks',
+          quote: '“Signed the final handover act, top notch quality. Zero headache during all 8 weeks of work”',
+          rating: 5
+        },
+        {
+          image: '/images/testimonials/review-telegram-12.webp',
+          messenger: 'Telegram',
+          author: 'Tetiana P.',
+          role: 'New build · 80 m² · 9 weeks',
+          quote: '“Furniture is already arranged, everything looks incredible! Thank you for a peaceful renovation experience”',
+          rating: 5
+        }
+      ]
+    },
+    cta: {
+      estimateBanner: { eyebrow: 'Next step', title: 'Turn the estimate into a precise quotation.', text: 'We will discuss the starting data, survey the property and agree the specification. Then we fix the precise quotation and timeline in the contract — with no hidden charges.', button: 'Continue to the form' },
+      processBanner: { eyebrow: 'First step — free', title: 'A headache-free renovation starts with one conversation.', text: 'In 20 minutes, we will define the right format, a realistic budget and the next step. Foreman site visit — free of charge.', button: 'Schedule a survey' },
+      galleryBanner: { eyebrow: 'Next project', title: 'Want the same result?', text: 'We will show how to reach this level in your apartment — with a fixed price and schedule before work starts. 3D design before the first worker on site.', button: 'Discuss my apartment' },
+      faqBanner: { eyebrow: 'Still have questions', title: 'One conversation closes them all.', text: 'In 20 minutes we will cover your property, budget and timeline — no obligations. Average reply time — 20 minutes.', button: 'Message us' },
+      testimonialsBanner: { eyebrow: 'Your project', title: 'The next story about a calm renovation could be yours.', button: 'Estimate my renovation' },
+      mobileBar: { calculate: 'Estimate', write: 'Message us' }
     },
     contact: {
       eyebrow: 'Let us start with your apartment',
       title: 'What kind of renovation do you want?',
-      lead: 'Leave your details. In our first conversation, we will define the format, budget and next practical step.',
+      lead: 'Leave your details — we usually reply within 20 minutes during business hours. First we clarify your apartment data, then prepare a precise quotation after the survey. No pressure and no obligations.',
       location: 'Kharkiv, Ukraine',
       locationLabel: 'Base location',
       schedule: 'Mon–Fri · 09:00–18:00',
@@ -661,7 +788,7 @@ export const content: Record<Locale, SiteCopy> = {  uk: {
       viber: 'viber://chat?number=%2B380000000000',
       mapEmbedUrl: 'https://www.google.com/maps?q=Kharkiv%2C+Ukraine&z=12&output=embed'
     },
-    footer: { line: 'Renovation designed for your space.', rights: 'eLITstroy. Concept 2026.', privacy: 'Your data is not shared with third parties' }
+    footer: { line: 'A headache-free renovation. From survey to handover.', ctaButton: 'Discuss a project', rights: 'eLITstroy. Concept 2026.', privacy: 'Your data is not shared with third parties' }
   }
 }
 
