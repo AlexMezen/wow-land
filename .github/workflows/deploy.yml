@@ -56,9 +56,9 @@ jobs:
           VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
       - name: Combine artifacts
         run: |
-          mkdir -p combined/wow-land/preview
-          cp -r main/dist/* combined/wow-land/
-          cp -r preview/dist/* combined/wow-land/preview/
+          mkdir -p combined/preview
+          cp -r main/dist/* combined/
+          cp -r preview/dist/* combined/preview/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: combined
