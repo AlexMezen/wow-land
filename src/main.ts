@@ -61,7 +61,7 @@ const asset = (path: string): string => {
 
 const brand = (copy: SiteCopy): string => `
   <a class="brand" href="#top" aria-label="${copy.metaTitle}">
-    <img src="${asset(copy.brand.image)}" alt="" width="42" height="42" decoding="async">
+    <img src="${asset(copy.brand.image)}" alt="" width="64" height="64" decoding="async">
     <span><b>${copy.brand.top}</b><b>${copy.brand.bottom}</b></span>
   </a>
 `
@@ -99,14 +99,60 @@ const createMarkup = (copy: SiteCopy): string => {
     <button type="button" data-condition="${condition.id}" data-multiplier="${condition.multiplier}"${index === 1 ? ' class="is-active"' : ''}>${condition.name}</button>
   `).join('')
 
-  const galleryItems = copy.gallery.items.map((item) => `
+  const galleryCases = copy.gallery.items.map((item) => {
+    const renovation = copy.estimate.renovationTypes.find((entry) => entry.id === item.renovationId)
+    const condition = copy.estimate.conditions.find((entry) => entry.id === item.conditionId)
+    const packageIndex = copy.estimate.renovationTypes.findIndex((entry) => entry.id === item.renovationId)
+    const packageCopy = copy.packages.items[packageIndex]
+    const rate = renovation && condition ? renovation.pricePerSqm * condition.multiplier : 0
+    const estimate = item.area && renovation && condition ? calculateEstimate({
+      area: item.area,
+      pricePerSqm: renovation.pricePerSqm,
+      conditionMultiplier: condition.multiplier,
+      weeksPerSqm: renovation.weeksPerSqm
+    }) : null
+    const budget = estimate
+      ? `≈ ${formatCurrency(estimate.total, locale)}`
+      : `${locale === 'uk' ? 'від' : 'from'} ${formatCurrency(rate, locale)}/${copy.estimate.areaUnit}`
+    const timeline = estimate
+      ? `${estimate.weeks}–${estimate.weeks + 2} ${copy.estimate.weeksUnit}`
+      : packageCopy?.timeline ?? '—'
+    return { item, renovation, condition, rate, budget, timeline }
+  })
+  const galleryItems = galleryCases.map(({ item, renovation, budget, timeline }) => `
     <article class="gallery-card">
-      <div class="gallery-card__media"><img src="${item.image}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"></div>
+      <button class="gallery-card__open" type="button" data-case-open="${item.index}" aria-label="${copy.gallery.openCase}: ${item.title}"></button>
+      <div class="gallery-card__media"><img src="${asset(item.image)}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"><span>${copy.gallery.openCase}${cornerIcon}</span></div>
       <div class="gallery-card__meta">
         <span>${item.index} / ${String(copy.gallery.items.length).padStart(2, '0')}</span>
         <div><p>${item.tag}</p><h3>${item.title}</h3><small>${item.location}</small></div>
       </div>
+      <dl class="gallery-card__facts">
+        <div><dt>${copy.gallery.formatLabel}</dt><dd>${renovation?.name ?? item.tag}</dd></div>
+        <div><dt>${copy.gallery.timelineLabel}</dt><dd>${timeline}</dd></div>
+        <div><dt>${copy.gallery.budgetLabel}</dt><dd>${budget}</dd></div>
+      </dl>
     </article>
+  `).join('')
+  const galleryPanels = galleryCases.map(({ item, renovation, condition, rate, budget, timeline }) => `
+    <section class="case-modal__panel" data-case-panel="${item.index}" hidden>
+      <div class="case-modal__media"><img src="${asset(item.image)}" alt="${item.title}" loading="lazy" decoding="async" width="1280" height="860"></div>
+      <div class="case-modal__content">
+        <p class="eyebrow">${item.index} · ${item.tag}</p>
+        <h3 id="case-title-${item.index}">${item.title}</h3>
+        <p class="case-modal__lead">${item.description}</p>
+        <dl class="case-modal__facts">
+          ${item.area ? `<div><dt>${copy.gallery.areaLabel}</dt><dd>${formatArea(item.area, locale)}</dd></div>` : ''}
+          <div><dt>${copy.gallery.formatLabel}</dt><dd>${renovation?.name ?? item.tag}</dd></div>
+          <div><dt>${copy.estimate.condition}</dt><dd>${condition?.name ?? '—'}</dd></div>
+          <div><dt>${copy.gallery.timelineLabel}</dt><dd>${timeline}</dd></div>
+          <div><dt>${item.area ? copy.gallery.budgetLabel : copy.gallery.rateLabel}</dt><dd>${item.area ? budget : `${formatCurrency(rate, locale)}/${copy.estimate.areaUnit}`}</dd></div>
+        </dl>
+        <ul>${item.details.map((detail) => `<li>${checkIcon}<span>${detail}</span></li>`).join('')}</ul>
+        <p class="case-modal__note">${copy.gallery.calculationNote}</p>
+        ${buttonLink('#estimate', copy.hero.primary)}
+      </div>
+    </section>
   `).join('')
   const faqItems = copy.faq.items.map((item, index) => `
     <article class="faq-item${index === 0 ? ' is-open' : ''}">
@@ -236,10 +282,39 @@ const createMarkup = (copy: SiteCopy): string => {
         <div class="scene-index"><span>CGI · 001</span><span>49.9935° N · 36.2304° E</span></div>
       </section>
 
+      <section class="gallery" id="gallery" data-scene="hidden">
+        <div class="container gallery__heading">
+          <div class="section-head section-head--dark reveal">
+            <p class="eyebrow"><span>01</span>${copy.gallery.eyebrow}</p>
+            <p class="section-index">COLLECTION / 01—06</p>
+          </div>
+          <div class="gallery__intro">
+            <h2 class="display-title split-reveal">${copy.gallery.title}</h2>
+            <p class="reveal">${copy.gallery.intro}</p>
+          </div>
+        </div>
+        <div class="gallery__pin">
+          <div class="gallery__track">${galleryItems}</div>
+          <div class="gallery__status"><span>${copy.gallery.cue}</span><div><i></i></div><b id="gallery-current">01</b></div>
+        </div>
+      </section>
+
+      <div class="case-modal" id="case-modal" hidden aria-hidden="true">
+        <button class="case-modal__backdrop" type="button" data-case-close aria-label="${copy.gallery.closeCase}"></button>
+        <div class="case-modal__dialog" role="dialog" aria-modal="true" tabindex="-1">
+          <button class="case-modal__close" type="button" data-case-close>${copy.gallery.closeCase}<span aria-hidden="true">×</span></button>
+          ${galleryPanels}
+        </div>
+      </div>
+
+      <div class="container">
+        ${ctaBanner(copy.cta.galleryBanner, '#contact', 'cta-banner--gold cta-banner--compact')}
+      </div>
+
       <section class="packages" id="packages" data-scene="hidden">
         <div class="container">
           <div class="section-head reveal">
-            <p class="eyebrow"><span>01</span>${copy.packages.eyebrow}</p>
+            <p class="eyebrow"><span>02</span>${copy.packages.eyebrow}</p>
             <p class="section-index">PACKAGES / FIXED PRICE</p>
           </div>
           <div class="packages__heading">
@@ -268,27 +343,6 @@ const createMarkup = (copy: SiteCopy): string => {
           </div>
         </div>
       </section>
-
-      <section class="gallery" id="gallery" data-scene="hidden">
-        <div class="container gallery__heading">
-          <div class="section-head section-head--dark reveal">
-            <p class="eyebrow"><span>02</span>${copy.gallery.eyebrow}</p>
-            <p class="section-index">COLLECTION / 01—06</p>
-          </div>
-          <div class="gallery__intro">
-            <h2 class="display-title split-reveal">${copy.gallery.title}</h2>
-            <p class="reveal">${copy.gallery.intro}</p>
-          </div>
-        </div>
-        <div class="gallery__pin">
-          <div class="gallery__track">${galleryItems}</div>
-          <div class="gallery__status"><span>${copy.gallery.cue}</span><div><i></i></div><b id="gallery-current">01</b></div>
-        </div>
-      </section>
-
-      <div class="container">
-        ${ctaBanner(copy.cta.galleryBanner, '#contact', 'cta-banner--gold')}
-      </div>
 
       <section class="investment" id="estimate" data-scene="hidden">
         <div class="container">
@@ -330,7 +384,16 @@ const createMarkup = (copy: SiteCopy): string => {
             </div>
           </div>
           <p class="calculator-disclaimer reveal"><span>i</span>${copy.estimate.disclaimer}</p>
-          ${ctaBanner(copy.cta.estimateBanner, '#contact')}
+          <aside class="estimate-next reveal">
+            <div class="estimate-next__copy">
+              <p class="eyebrow">${copy.cta.estimateBanner.eyebrow}</p>
+              <h3>${copy.cta.estimateBanner.title}</h3>
+              <p>${copy.cta.estimateBanner.text}</p>
+              <div class="estimate-next__value"><span>${copy.estimate.nextStepEstimateLabel}</span><strong id="next-step-result">$31,200</strong></div>
+              ${buttonLink('#contact', copy.cta.estimateBanner.button)}
+            </div>
+            <div class="estimate-next__media"><img src="${asset(copy.estimate.nextStepImage)}" alt="${copy.estimate.nextStepImageAlt}" loading="lazy" decoding="async" width="1280" height="860"></div>
+          </aside>
         </div>
       </section>
 
@@ -375,7 +438,7 @@ const createMarkup = (copy: SiteCopy): string => {
             <div class="faq__heading"><h2 class="display-title split-reveal">${copy.faq.title}</h2><p class="reveal">${copy.faq.lead}</p></div>
             <div class="faq__items">${faqItems}</div>
           </div>
-          ${ctaBanner(copy.cta.faqBanner, '#contact')}
+          ${ctaBanner(copy.cta.faqBanner, '#contact', 'cta-banner--compact')}
         </div>
       </section>
 
@@ -504,6 +567,71 @@ const select = <T extends Element>(selector: string, root: ParentNode = document
   return element
 }
 
+const setupGalleryCases = (): (() => void) => {
+  const modal = select<HTMLElement>('#case-modal')
+  const dialog = select<HTMLElement>('.case-modal__dialog', modal)
+  const openButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-case-open]')]
+  const closeButtons = [...modal.querySelectorAll<HTMLButtonElement>('[data-case-close]')]
+  const panels = [...modal.querySelectorAll<HTMLElement>('[data-case-panel]')]
+  let previousFocus: HTMLElement | null = null
+
+  const close = (): void => {
+    if (modal.hidden) return
+    modal.hidden = true
+    modal.setAttribute('aria-hidden', 'true')
+    document.body.classList.remove('case-open')
+    panels.forEach((panel) => { panel.hidden = true })
+    previousFocus?.focus()
+  }
+
+  const open = (index: string, trigger: HTMLElement): void => {
+    const panel = panels.find((entry) => entry.dataset.casePanel === index)
+    if (!panel) return
+    previousFocus = trigger
+    panels.forEach((entry) => { entry.hidden = entry !== panel })
+    dialog.setAttribute('aria-labelledby', `case-title-${index}`)
+    modal.hidden = false
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.classList.add('case-open')
+    dialog.focus()
+    track('case_open', { case: index })
+  }
+
+  const openHandlers = new Map<HTMLButtonElement, () => void>()
+  openButtons.forEach((button) => {
+    const handler = (): void => open(button.dataset.caseOpen ?? '', button)
+    openHandlers.set(button, handler)
+    button.addEventListener('click', handler)
+  })
+  closeButtons.forEach((button) => button.addEventListener('click', close))
+  const modalCtas = [...modal.querySelectorAll<HTMLAnchorElement>('.button')]
+  modalCtas.forEach((link) => link.addEventListener('click', close))
+  const onKeydown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape') close()
+    if (event.key !== 'Tab' || modal.hidden) return
+    const focusable = [...dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter((element) => !element.closest<HTMLElement>('[hidden]'))
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (!first || !last) return
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+  window.addEventListener('keydown', onKeydown)
+
+  return () => {
+    openHandlers.forEach((handler, button) => button.removeEventListener('click', handler))
+    closeButtons.forEach((button) => button.removeEventListener('click', close))
+    modalCtas.forEach((link) => link.removeEventListener('click', close))
+    window.removeEventListener('keydown', onKeydown)
+    document.body.classList.remove('case-open')
+  }
+}
+
 const setupCalculator = (): (() => void) => {
   const area = select<HTMLInputElement>('#area')
   const areaDisplay = select<HTMLOutputElement>('#area-display')
@@ -511,6 +639,7 @@ const setupCalculator = (): (() => void) => {
   const areaResult = select<HTMLElement>('#area-result')
   const perSqmResult = select<HTMLElement>('#per-sqm-result')
   const weeksResult = select<HTMLElement>('#weeks-result')
+  const nextStepResult = select<HTMLElement>('#next-step-result')
   const orbitContext = select<HTMLElement>('#orbit-context')
   const orbit = select<HTMLElement>('#roi-orbit')
   const conditionButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-condition]')]
@@ -531,6 +660,7 @@ const setupCalculator = (): (() => void) => {
     area.style.setProperty('--range-progress', `${rangeProgress}%`)
     areaDisplay.value = formatArea(areaValue, locale)
     totalResult.textContent = formatCurrency(estimate.total, locale)
+    nextStepResult.textContent = formatCurrency(estimate.total, locale)
     areaResult.textContent = formatArea(areaValue, locale)
     perSqmResult.textContent = formatCurrency(estimate.perSqm, locale)
     weeksResult.textContent = `${estimate.weeks}–${estimate.weeks + 2} ${siteContent[locale].estimate.weeksUnit}`
@@ -1093,6 +1223,7 @@ const renderPage = (): void => {
 
   const cleanups = [
     setupNavigation(),
+    setupGalleryCases(),
     setupCalculator(),
     setupForm(siteContent[locale]),
     setupMessengerFab(),

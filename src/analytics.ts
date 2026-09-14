@@ -1,6 +1,7 @@
 type AnalyticsEvent =
   | 'cta_click'
   | 'calculator_change'
+  | 'case_open'
   | 'form_submit'
   | 'language_change'
   | 'messenger_select'
