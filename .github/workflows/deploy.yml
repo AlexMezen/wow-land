@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, new-deploy]
   workflow_dispatch:
 
 permissions:
@@ -19,20 +19,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+      - uses: actions/checkout@v4
+        with:
+          ref: new-deploy
+          path: preview
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache-dependency-path: |
+            main/package-lock.json
+            preview/package-lock.json
+      - name: Build main
+        working-directory: main
+        run: |
+          npm ci
+          npm run build
         env:
           VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
           VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
           VITE_CLARITY_ID: ${{ secrets.VITE_CLARITY_ID }}
           VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
+      - name: Build new-deploy preview
+        working-directory: preview
+        run: |
+          npm ci
+          npx tsc
+          npx vite build --base=/wow-land/preview/
+        env:
+          VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
+          VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
+          VITE_CLARITY_ID: ${{ secrets.VITE_CLARITY_ID }}
+          VITE_ADMIN_PASSWORD_HASH: ${{ secrets.VITE_ADMIN_PASSWORD_HASH }}
+      - name: Combine artifacts
+        run: |
+          mkdir -p combined/preview
+          cp -r main/dist/* combined/
+          cp -r preview/dist/* combined/preview/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: combined
 
   deploy:
     needs: build
